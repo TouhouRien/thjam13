@@ -1,0 +1,1 @@
+.\atelier\atelier.exe run game
