@@ -1,0 +1,5 @@
+
+1/ Ajoutez vos dossiers media dans ce répertoire
+2/ Dans le fichier de projet, ajouter la ligne correspondante dans la configuration voulue:
+media "NOM_DU_DOSSIER" true/false (ex: media "img" true)
+(true si le fichier doit être compressé durant l’export.)

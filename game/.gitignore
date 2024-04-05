@@ -1,0 +1,10 @@
+
+# Dossiers
+export/
+
+# Fichiers
+*.pqt
+*.atl
+*.exe
+*.dll
+*.so

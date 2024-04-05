@@ -1,0 +1,8 @@
+default "game"
+config "game" {
+    source "app.gr"
+    window {
+        size 800 600
+        title "game"
+    }
+}
