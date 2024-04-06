@@ -21,7 +21,27 @@ tilemap "level1" {
     ]
 }
 
-sprite "sus" {
+sprite "mayumi" {
     texture "terrain"
     clip 0 80 32 32
+}
+
+sprite "seija" {
+    texture "terrain"
+    clip 32 80 32 32
+}
+
+sprite "cirno" {
+    texture "terrain"
+    clip 64 80 32 32
+}
+
+sprite "saki" {
+    texture "terrain"
+    clip 96 80 32 32
+}
+
+sprite "momoyo" {
+    texture "terrain"
+    clip 128 80 32 32
 }

@@ -26,7 +26,7 @@ export func initLevel() {
         }
     }
 
-    haniwa(10, -100);
+    testPlayer(10, -100);
 }
 
 
@@ -47,8 +47,7 @@ func initInput() {
     @Input.addActionEvent("restart", @InputEvent.keyButton(KeyButton.r, KeyState.pressed));
 }
 
-
-task haniwa(posX: int, posY: int) {
+task testPlayer(posX: int, posY: int) {
     initInput();
 
     var scene = @Level.findSceneByName("level")?;
@@ -64,7 +63,7 @@ task haniwa(posX: int, posY: int) {
     scene.addEntity(entity);
     player.entity = entity;
 
-    var sprite = @Sprite("sus");
+    var sprite = @Sprite("mayumi");
     entity.addImage(sprite);
 
     var speedX: float;
@@ -100,4 +99,22 @@ task haniwa(posX: int, posY: int) {
             }
         }
     }
+}
+
+task haniwa(posX: int, posY: int) {
+    var scene = @Level.findSceneByName("level")?;
+
+    var startPosition = @Vec2i(posX, posY);
+
+    var agent = @Actor;
+    agent.position = startPosition;
+    agent.hitbox = @Vec2i(16, 16);
+    scene.addActor(agent);
+
+    var entity = @Entity;
+    scene.addEntity(entity);
+    player.entity = entity;
+
+    var sprite = @Sprite("sus");
+    entity.addImage(sprite);
 }
