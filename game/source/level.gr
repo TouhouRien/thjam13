@@ -14,28 +14,52 @@ export func initLevel() {
     map.addImage(tilemap);
     scene.addEntity(map);
 
-    var tileSize = tilemap.tileSize;
     var width = tilemap.width;
     var height = tilemap.height;
 
-    loop(y, height) {
-        loop(x, width) {
+    loop (y, height) {
+        loop (x, width) {
             var tileId = tilemap.getTile(x, y);
 
-            if(tileId > 1) {
-                var solid = @Solid;
-                solid.position = @Vec2i(x * tileSize.x as<int>, y * tileSize.y as<int>) + @Vec2i(16, 16);
-                solid.hitbox = @Vec2i(16, 16);
-                solid.addTag(tileToName(tileId));
-                scene.addSolid(solid);
+            if (isSolid(tileId)) {
+                var solid = addSolid(scene, tilemap, @Vec2i(x, y), tileId);
+
+                var nextTileId = tilemap.getTile(x + 1, y);
+                if (!isSolid(nextTileId)) {
+                    solid.addTag("stop");
+                }
+
+                var belowTileId = tilemap.getTile(x - 1, y - 1);
+                var startTileId = tilemap.getTile(x - 1, y - 2);
+                if (!isSolid(belowTileId) && !isSolid(startTileId)) {
+                    var startTile = addSolid(scene, tilemap, @Vec2i(x - 1, y - 2), tileId);
+                    startTile.addTag("start");
+                }
             }
         }
     }
 
-    haniwa("mayumi", 0, 0, true);
-    haniwa("saki", 1, 0, false);
-    haniwa("seija", 2, 0, false);
-    haniwa("momoyo", 10, 11, false);
+    haniwa(scene, tilemap, "mayumi", 0, 0, true);
+    haniwa(scene, tilemap, "seija", 1, 0, false);
+    haniwa(scene, tilemap, "cirno", 2, 0, false);
+    haniwa(scene, tilemap, "saki", 3, 0, false);
+    haniwa(scene, tilemap, "momoyo", 10, 11, false);
+}
+
+func addSolid(scene: Scene, tilemap: Tilemap, tilePos: Vec2i, tileId: int)(Solid) {
+    var tileSize = tilemap.tileSize;
+
+    var solid = @Solid;
+    solid.position = @Vec2i(tilePos.x * tileSize.x as<int>, tilePos.y * tileSize.y as<int>) + @Vec2i(16, 16);
+    solid.hitbox = @Vec2i(16, 16);
+    solid.addTag(tileToName(tileId));
+    scene.addSolid(solid);
+
+    return solid;
+}
+
+func isSolid(tileId: int)(bool) {
+    return tileId > 1;
 }
 
 func tileToName(tileId: int)(string) {
@@ -48,8 +72,56 @@ func tileToName(tileId: int)(string) {
         return "earth";
     case(3)
         return "rock";
+    case(4)
+        return "ice";
+    case(6)
+        return "obstacle";
 
     return "";
+}
+
+func nameToTileId(name: string)(int) {
+    switch(name)
+    case("air")
+        return 0;
+    case("water")
+        return 1;
+    case("earth")
+        return 2;
+    case("rock")
+        return 3;
+    case("ice")
+        return 4;
+    case("obstacle")
+        return 6;
+
+    return -1;
+}
+
+func tilePositionWorldToTilemap(tilemap: Tilemap, vec: Vec2i)(Vec2i) {
+    var noOffset = @Vec2i(vec.x - 16, vec.y - 16);
+    var noSize   = @Vec2i(noOffset.x / 32, noOffset.y / 32);
+    return noSize;
+}
+
+func waterToIce(scene: Scene, tilemap: Tilemap, tilePos: Vec2i, tileId: int) {
+    var isWater = false;
+    var nextPos = @Vec2i(tilePos.x + 1, tilePos.y);
+
+    do {
+        var nextId = getTile(tilemap, nextPos.x, nextPos.y);
+
+        if (tileToName(nextId) == "water") {
+            var iceId = nameToTileId("ice");
+            setTile(tilemap, nextPos.x, nextPos.y, iceId);
+            addSolid(scene, tilemap, nextPos, iceId);
+            isWater = true;
+        } else {
+            isWater = false;
+        }
+
+        nextPos = @Vec2i(nextPos.x + 1, nextPos.y);
+    } while (isWater);
 }
 
 func initInput() {
@@ -68,7 +140,7 @@ func initInput() {
     @Input.addActionEvent("restart", @InputEvent.keyButton(KeyButton.r, KeyState.pressed));
 }
 
-task haniwa(name: string, posX: int, posY: int, isPlayer: bool) {
+task haniwa(scene: Scene, tilemap: Tilemap, name: string, posX: int, posY: int, isPlayer: bool) {
     initInput();
 
     var scene = @Level.findSceneByName("level")?;
@@ -114,32 +186,68 @@ task haniwa(name: string, posX: int, posY: int, isPlayer: bool) {
             if (isPlayer && @Input.isActionActivated("jump")) {
                 player.dismount();
                 isOnGround = false;
-                speedY = -10f;
+                targetSpeedY = -10f;
             }
         }
 
         var collision = player.moveX(speedX);
         if (collision) {
+            if (name == "seija" && block.hasTag("obstacle")) {
+                // Retourner obstacle
+            }
         }
 
         var collision = player.moveY(speedY);
         if (collision) {
             var collision = collision?;
+            var block     = collision.solid;
+
             if (collision.direction.y > 0) {
                 isOnGround = true;
                 player.mount(collision.solid);
 
-                var block = collision.solid;
+                // Recupere l'id du block
+                var tilePos = tilePositionWorldToTilemap(tilemap, block.position);
+                var tileId  = getTile(tilemap, tilePos.x, tilePos.y);
+
                 if (name == "momoyo" && block.hasTag("rock")) {
                     targetSpeedX = 0f;
+                    setTile(tilemap, tilePos.x, tilePos.y, nameToTileId("air"));
+                    block.remove();
+                }
+
+                // Saki saute en rencontrant du vide
+                if (name == "saki") {
+                    if (block.hasTag("stop")) {
+                        targetSpeedX = 0f;
+                        targetSpeedY = -10f;
+                    } else {
+                        targetSpeedY = 5f;
+                    }
+                }
+
+                // Cirno s'arrete en rencontrant du vide et transforme le prochain bloc en glace si c'est de l'eau
+                if (name == "cirno" && block.hasTag("stop")) {
+                    targetSpeedX = 0f;
+                    waterToIce(scene, tilemap, tilePos, tileId);
                 }
             } else {
-                isOnGround = false;
+                // Saki apres un saut trouve la prochaine plateforme
+                if (name == "saki" && block.hasTag("start")) {
+                    targetSpeedY = 0.4f;
+                    targetSpeedX = 1f;
+                }
             }
 
             if (collision.direction.y < 0) {
                 speedY = 0f;
             }
+        } else {
+            isOnGround = false;
         }
     }
+}
+
+task flip() {
+    
 }
