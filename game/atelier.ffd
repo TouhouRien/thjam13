@@ -3,7 +3,7 @@ config "game" {
     source "app.gr"
     media "data" true
     window {
-        size 800 600
+        size 1280 720
         title "game"
     }
 }
