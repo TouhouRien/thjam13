@@ -5,10 +5,15 @@ export func menu() {
     var titleFont = initFont(3);
     var font = initFont(2);
 
-    var title = @Label("Haniwa", titleFont);
+    var title = @UIElement;
     title.setAlign(UIAlignX.center, UIAlignY.top);
     title.position = @Vec2f(0f, 100f);
+    var titleImg = @Sprite("title");
+    titleImg.anchor = @Vec2f.zero;
+    title.addImage(titleImg);
+    title.size = titleImg.size;
     @UI.add(title);
+
 
     var vbox = @VBox;
     vbox.setAlign(UIAlignX.left, UIAlignY.center);

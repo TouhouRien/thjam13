@@ -5,5 +5,6 @@ config "game" {
     window {
         size 1024 768
         title "game"
+        icon "data/icon.png"
     }
 }
