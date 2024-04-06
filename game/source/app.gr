@@ -1,5 +1,5 @@
+import "level.gr"
 
 event app {
-    // Début du programme
-    print("Bonjour le monde !");
+    initLevel();
 }

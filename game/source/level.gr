@@ -1,0 +1,45 @@
+
+class Cell {
+
+}
+
+func @Cell() (Cell) {
+    return @Cell {};
+}
+
+var level : [[Cell]];
+
+export func initLevel() {
+    var scene = @Scene;
+    scene.name = "level";
+    @Level.addScene(scene);
+
+    var tilemap = @Tilemap("level1");
+    var map = @Entity;
+    map.addImage(tilemap);
+    scene.addEntity(map);
+
+    var width = 30;
+    var height = 20;
+
+    loop(y, height) {
+        var column = list<Cell>[];
+
+        loop(x, width) {
+            column ~= @Cell();
+        }
+
+        level ~= column;
+    }
+
+    level[1, 2] = @Cell();
+}
+
+
+task haniwa() {
+
+
+    loop yield {
+
+    }
+}
