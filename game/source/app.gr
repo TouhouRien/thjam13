@@ -1,16 +1,17 @@
 import "level.gr"
+import "menu.gr"
 
 event app {
     debug();
-    initLevel();
+    menu();
 }
 
 task debug() {
     loop yield {
-        if(@Input.isPressed(KeyButton.f5))
+        if(@Input.isDown(KeyButton.f5))
             @App.reload(true, true);
 
-        if(@Input.isPressed(KeyButton.escape))
+        if(@Input.isDown(KeyButton.escape))
             @App.close();
     }
 }
