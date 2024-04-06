@@ -37,12 +37,14 @@ func initInput() {
     @Input.addAction("left");
     @Input.addAction("right");
     @Input.addAction("jump");
+    @Input.addAction("restart");
     
     @Input.addActionEvent("up", @InputEvent.keyButton(KeyButton.up, KeyState.pressed));
     @Input.addActionEvent("down", @InputEvent.keyButton(KeyButton.down, KeyState.pressed));
     @Input.addActionEvent("left", @InputEvent.keyButton(KeyButton.left, KeyState.pressed));
     @Input.addActionEvent("right", @InputEvent.keyButton(KeyButton.right, KeyState.pressed));
     @Input.addActionEvent("jump", @InputEvent.keyButton(KeyButton.space, KeyState.pressed));
+    @Input.addActionEvent("restart", @InputEvent.keyButton(KeyButton.r, KeyState.pressed));
 }
 
 
@@ -51,8 +53,10 @@ task haniwa(posX: int, posY: int) {
 
     var scene = @Level.findSceneByName("level")?;
 
+    var startPosition = @Vec2i(posX, posY);
+
     var player = @Actor;
-    player.position = @Vec2i(posX, posY);
+    player.position = startPosition;
     player.hitbox = @Vec2i(16, 16);
     scene.addActor(player);
 
@@ -71,8 +75,12 @@ task haniwa(posX: int, posY: int) {
         speedX = approach(speedX, @Input.getActionAxis("left", "right") * 3f, 0.5f);
         speedY = approach(speedY, 5f, 0.5f);
 
-        if(isOnGround) {
-            if(@Input.isActionActivated("jump")) {
+        if (@Input.isActionActivated("restart")) {
+            player.position = startPosition;
+        }
+
+        if (isOnGround) {
+            if (@Input.isActionActivated("jump")) {
                 player.dismount();
                 isOnGround = false;
                 speedY = -10f;
@@ -80,13 +88,13 @@ task haniwa(posX: int, posY: int) {
         }
 
         var collision = player.moveX(speedX);
-        if(collision) {
+        if (collision) {
         }
 
         var collision = player.moveY(speedY);
-        if(collision) {
+        if (collision) {
             var collision = collision?;
-            if(collision.direction.y > 0) {
+            if (collision.direction.y > 0) {
                 isOnGround = true;
                 player.mount(collision.solid);
             }
