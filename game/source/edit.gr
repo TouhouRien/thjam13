@@ -3,20 +3,21 @@ import "map.gr"
 
 export func editLevel() {
     initMap(15, 15);
+    var scene = @Level.findSceneByName("level")?;
 
     createDrawer();
 
     @Input.addAction("click");
     @Input.addActionEvent("click", @InputEvent.mouseButton(MouseButton.left, KeyState.pressed, 1, @Vec2f.zero, @Vec2f.zero));
-/*
+
     loop yield {
         if (@Input.isActionActivated("click")) {
-            var x: int = (scene.mousePosition.x / tilemap.tileSize.x) as<int>;
-            var y: int = (scene.mousePosition.y / tilemap.tileSize.y) as<int>;
+            var x: int = (scene.mousePosition.x / 32) as<int>;
+            var y: int = (scene.mousePosition.y / 32) as<int>;
             //print(x ~","~ y as<int>);
-            tilemap.setTile(x, y, 2);
+            setMapId(x, y, 2);
         }
-    }*/
+    }
 }
 
 func createDrawer() {

@@ -8,19 +8,20 @@ class Map {
     var width : uint;
     var height : uint;
     var entity : Entity;
+    var tilemap : Tilemap;
 }
 
-var map: Map;
-
-func @Map() (Map) {
-    return @Map {};
-}
+var currentMap: Map?;
 
 export func initMap(width : uint, height: uint) {
-    map = @Map {
+    var tileset = @Tileset("terrain");
+
+    var map = @Map {
         width = width;
         height = height;
+        tilemap = @Tilemap(tileset, width, height);
     };
+    map.tilemap.anchor = @Vec2f.zero;
 
     loop(y, height) {
         var column: [Cell];
@@ -40,22 +41,23 @@ export func initMap(width : uint, height: uint) {
     @Level.addScene(scene);
     @Camera.setPosition(@App.center as<Vec2f>);
 
-    var tileset = @Tileset("terrain");
-    var tilemap = @Tilemap(tileset, width, height);
-    tilemap.anchor = @Vec2f.zero;
-
-    map.entity.addImage(tilemap);
+    map.entity.addImage(map.tilemap);
     scene.addEntity(map.entity);
+
+    currentMap = map;
 }
 
 export func setMapId(x: uint, y: uint, id: int) {
+    var map = currentMap?;
     if(x >= map.width or y >= map.height)
         return;
-    map.grid[x, y] = id;
+    map.grid[x][y].id = id;
+    map.tilemap.setTile(x, y, id);
 }
 
 export func getMapId(x: uint, y: uint) (int) {
+    var map = currentMap?;
     if(x >= map.width or y >= map.height)
         return;
-    return map.grid[x, y];
+    return map.grid[x][y].id;
 }
