@@ -1,16 +1,23 @@
 import "util.gr"
 
+var tileSetSize = 64;
+var tileSetHalfSize = tileSetSize / 2;
+
 export func initLevel() {
     var scene = @Scene;
     scene.name = "level";
 
     @Level.addScene(scene);
     @Camera.setPosition(@App.center as<Vec2f>);
+    
+    var gamebg = @Sprite("gamebg");
+    gamebg.anchor = @Vec2f.zero;
 
     var tilemap = @Tilemap("level2");
     tilemap.anchor = @Vec2f.zero;
 
     var map = @Entity;
+    map.addImage(gamebg);
     map.addImage(tilemap);
     scene.addEntity(map);
 
@@ -39,19 +46,24 @@ export func initLevel() {
         }
     }
 
-    haniwa(scene, tilemap, "mayumi", 0, 0, true);
-    haniwa(scene, tilemap, "seija", 1, 0, false);
+    initInput();
+
+    haniwa(scene, tilemap, "mayumi", 0, 0, false);
     haniwa(scene, tilemap, "cirno", 2, 0, false);
     haniwa(scene, tilemap, "saki", 3, 0, false);
-    haniwa(scene, tilemap, "momoyo", 10, 11, false);
+
+    goal(scene, 15, 0);
+
+    /*haniwa(scene, tilemap, "seija", 1, 0, false);
+    haniwa(scene, tilemap, "momoyo", 10, 11, false);*/
 }
 
 func addSolid(scene: Scene, tilemap: Tilemap, tilePos: Vec2i, tileId: int)(Solid) {
     var tileSize = tilemap.tileSize;
 
     var solid = @Solid;
-    solid.position = @Vec2i(tilePos.x * tileSize.x as<int>, tilePos.y * tileSize.y as<int>) + @Vec2i(16, 16);
-    solid.hitbox = @Vec2i(16, 16);
+    solid.position = @Vec2i(tilePos.x * tileSize.x as<int>, tilePos.y * tileSize.y as<int>) + @Vec2i(tileSetHalfSize, tileSetHalfSize);
+    solid.hitbox = @Vec2i(tileSetHalfSize, tileSetHalfSize);
     solid.addTag(tileToName(tileId));
     scene.addSolid(solid);
 
@@ -99,8 +111,8 @@ func nameToTileId(name: string)(int) {
 }
 
 func tilePositionWorldToTilemap(tilemap: Tilemap, vec: Vec2i)(Vec2i) {
-    var noOffset = @Vec2i(vec.x - 16, vec.y - 16);
-    var noSize   = @Vec2i(noOffset.x / 32, noOffset.y / 32);
+    var noOffset = @Vec2i(vec.x - tileSetHalfSize, vec.y - tileSetHalfSize);
+    var noSize   = @Vec2i(noOffset.x / tileSetSize, noOffset.y / tileSetSize);
     return noSize;
 }
 
@@ -141,26 +153,21 @@ func initInput() {
 }
 
 task haniwa(scene: Scene, tilemap: Tilemap, name: string, posX: int, posY: int, isPlayer: bool) {
-    initInput();
-
-    var scene = @Level.findSceneByName("level")?;
-
-    var startPosition = @Vec2i(posX * 32, (23 - posY) * 32);
-    startPosition.x += 16;
-    startPosition.y -= 16;
+    var startPosition = @Vec2i(posX * tileSetSize, (11 - posY) * tileSetSize);
+    startPosition.x += tileSetHalfSize;
+    startPosition.y -= tileSetHalfSize;
 
     var player = @Actor;
     player.position = startPosition;
-    player.hitbox = @Vec2i(12, 12);
+    player.hitbox = @Vec2i(tileSetHalfSize, tileSetHalfSize);
     scene.addActor(player);
 
     var entity = @Entity;
     scene.addEntity(entity);
     player.entity = entity;
 
-    var sprite = @Sprite(name);
-    sprite.position = @Vec2f(0, -4);
-    entity.addImage(sprite);
+    var animation = @Animation(name);
+    entity.addImage(animation);
 
     var targetSpeedX = 1f;
     var targetSpeedY = 5f;
@@ -251,6 +258,20 @@ task haniwa(scene: Scene, tilemap: Tilemap, name: string, posX: int, posY: int, 
     }
 }
 
-task flip() {
+task goal(scene: Scene, posX: int, posY: int) {
+    var startPosition = @Vec2i(posX * tileSetSize, (11 - posY) * tileSetSize);
+    startPosition.x += tileSetHalfSize;
+    startPosition.y -= tileSetHalfSize;
 
+    var target = @Actor;
+    target.position = startPosition;
+    target.hitbox = @Vec2i(tileSetHalfSize, tileSetHalfSize);
+    scene.addActor(target);
+
+    var entity = @Entity;
+    scene.addEntity(entity);
+    target.entity = entity;
+
+    var animation = @Animation("goal");
+    entity.addImage(animation);
 }
