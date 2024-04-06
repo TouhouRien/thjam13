@@ -1,27 +1,27 @@
 import "util.gr"
 import "map.gr"
 
+var tileId : int;
+
 export func editLevel() {
     initMap(15, 15);
     var scene = @Level.findSceneByName("level")?;
 
     createDrawer();
-
-    @Input.addAction("click");
-    @Input.addActionEvent("click", @InputEvent.mouseButton(MouseButton.left, KeyState.pressed, 1, @Vec2f.zero, @Vec2f.zero));
+    var ts = @Tileset("terrain");
+    var tm = @Tilemap(ts, 0, 0);
 
     loop yield {
         if (@Input.isActionActivated("click")) {
-            var x: int = (scene.mousePosition.x / 32) as<int>;
-            var y: int = (scene.mousePosition.y / 32) as<int>;
-            //print(x ~","~ y as<int>);
-            setMapId(x, y, 2);
+            var x: int = (scene.mousePosition.x / tm.tileSize.x) as<int>;
+            var y: int = (scene.mousePosition.y / tm.tileSize.y) as<int>;
+            setMapId(x, y, tileId);
         }
     }
 }
 
 func createDrawer() {
-    var width = 400f;
+    var width = 700f;
     var height = 100f;
 
     var drawer = @UIElement;
@@ -33,6 +33,37 @@ func createDrawer() {
     bg.anchor = @Vec2f.zero;
     bg.color = @Color(0.08f, 0.11f, 0.18f);
     drawer.addImage(bg);
+
+    var hbox = @HBox;
+    hbox.spacing = 8f;
+    drawer.addUI(hbox);
+
+    var ts = @Tileset("terrain");
+
+    for(id, -1 -> 7) {
+        var btn = @UIElement;
+        btn.size = @Vec2f(64, 64f);
+
+        var rect = @RoundedRectangle.fill(btn.size.x, btn.size.y, 8f);
+        rect.anchor = @Vec2f.zero;
+        rect.color = @Color.red;
+        btn.addImage(rect);
+
+        var tm = @Tilemap(ts, 1, 1);
+        tm.setTile(0, 0, id);
+        tm.anchor = @Vec2f.half;
+        tm.position = @Vec2f(32f, 32f);
+
+        btn.addImage(tm);
+
+        btn.addEventListener("click", event {
+            tileId = id;
+        });
+        btn.addEventListener("update", event {
+            rect.filled = (tileId == id);
+        });
+        hbox.addUI(btn);
+    }
 
     @UI.add(drawer);
 }
