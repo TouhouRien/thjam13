@@ -2,16 +2,8 @@
 *.o
 *.obj
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-*.lib
-
 # Executables
-*.exe
 bin/
-export/
 
 # DUB
 .dub
