@@ -38,7 +38,7 @@ func initHaniwa(scene: Scene, map: Map, name: string, startPos: Vec2i)(Haniwa) {
 
 export func initLevel() {
     var music = @Music("tinyClayBuddies");
-    music.play();
+    music.playTrack(2f);
 
     var freezeSFX = @Sound("freeze");
     freezeSFX.play();
