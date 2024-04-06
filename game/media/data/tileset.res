@@ -20,3 +20,8 @@ tilemap "level1" {
         [0 1 0 0 0]
     ]
 }
+
+sprite "sus" {
+    texture "terrain"
+    clip 0 80 32 32
+}

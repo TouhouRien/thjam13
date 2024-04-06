@@ -1,14 +1,4 @@
 
-class Cell {
-
-}
-
-func @Cell() (Cell) {
-    return @Cell {};
-}
-
-var level : [[Cell]];
-
 export func initLevel() {
     var scene = @Scene;
     scene.name = "level";
@@ -19,27 +9,87 @@ export func initLevel() {
     map.addImage(tilemap);
     scene.addEntity(map);
 
-    var width = 30;
-    var height = 20;
+    var tileSize = tilemap.tileSize;
+    var width = tilemap.width;
+    var height = tilemap.height;
 
     loop(y, height) {
-        var column = list<Cell>[];
-
         loop(x, width) {
-            column ~= @Cell();
-        }
+            var tileId = tilemap.getTile(x, y);
 
-        level ~= column;
+            if(tileId > 0) {
+                var solid = @Solid;
+                solid.position = @Vec2i(x * tileSize.x as<int>, y * tileSize.y as<int>);
+                solid.hitbox = @Vec2i(16, 16);
+                scene.addSolid(solid);
+            }
+        }
     }
 
-    level[1, 2] = @Cell();
+    haniwa(10, -100);
 }
 
 
-task haniwa() {
 
+func initInput() {
+    @Input.addAction("up");
+    @Input.addAction("down");
+    @Input.addAction("left");
+    @Input.addAction("right");
+    @Input.addAction("jump");
+    
+    @Input.addActionEvent("up", @InputEvent.keyButton(KeyButton.up, KeyState.pressed));
+    @Input.addActionEvent("down", @InputEvent.keyButton(KeyButton.down, KeyState.pressed));
+    @Input.addActionEvent("left", @InputEvent.keyButton(KeyButton.left, KeyState.pressed));
+    @Input.addActionEvent("right", @InputEvent.keyButton(KeyButton.right, KeyState.pressed));
+    @Input.addActionEvent("jump", @InputEvent.keyButton(KeyButton.space, KeyState.pressed));
+}
+
+
+task haniwa(posX: int, posY: int) {
+    initInput();
+
+    var scene = @Level.findSceneByName("level")?;
+
+    var player = @Actor;
+    player.position = @Vec2i(posX, posY);
+    player.hitbox = @Vec2i(16, 16);
+    scene.addActor(player);
+
+    var entity = @Entity;
+    scene.addEntity(entity);
+    player.entity = entity;
+
+    var sprite = @Sprite("sus");
+    entity.addImage(sprite);
+
+    var speedX: float;
+    var speedY: float;
+    var isOnGround: bool;
 
     loop yield {
+        speedX = approach(speedX, @Input.getActionAxis("left", "right") * 3f, 0.5f);
+        speedY = approach(speedY, 5f, 0.5f);
 
+        if(isOnGround) {
+            if(@Input.isActionActivated("jump")) {
+                player.dismount();
+                isOnGround = false;
+                speedY = -10f;
+            }
+        }
+
+        var collision = player.moveX(speedX);
+        if(collision) {
+        }
+
+        var collision = player.moveY(speedY);
+        if(collision) {
+            var collision = collision?;
+            if(collision.direction.y > 0) {
+                isOnGround = true;
+                player.mount(collision.solid);
+            }
+        }
     }
 }
