@@ -48,7 +48,7 @@ export func menu() {
     vbox.position = @Vec2f(50f, 0f);
     @UI.add(vbox);
 
-    var startBtn = createButton("Start Game", font);
+    var startBtn = createButton(@Sprite("start"));
     startBtn.addEventListener("click", event {
         @UI.clear();
         initLevel();
@@ -62,7 +62,7 @@ export func menu() {
     });
     vbox.addUI(editBtn);
 
-    var exitBtn = createButton("Quit", font);
+    var exitBtn = createButton(@Sprite("exit"));
     exitBtn.addEventListener("click", event {
         @App.close();
     });
@@ -92,6 +92,43 @@ func createButton(text: string, font: Font) (UIElement) {
 
     btn.addEventListener("mouseleave", event {
         bg.isVisible = false;
+    });
+
+    return btn;
+}
+
+func createButton(sprite: Sprite) (UIElement) {
+    var width = sprite.size.x;
+    var height = sprite.size.y;
+
+    var btn = @UIElement;
+
+    sprite.anchor = @Vec2f.zero;
+
+    btn.addImage(sprite);
+    btn.size = @Vec2f(width, height);
+
+    var state = @UIState("enter");
+    state.angle = rand(10f, 30f);
+    state.time = 10;
+    state.spline = Spline.sineInOut;
+    btn.addState(state);
+
+    var state = @UIState("leave");
+    state.angle = -rand(10f, 30f);
+    state.scale = @Vec2f.one * 0.8f;
+    state.time = 10;
+    state.spline = Spline.sineInOut;
+    btn.addState(state);
+
+    btn.setState("leave");
+
+    btn.addEventListener("mouseenter", event {
+        btn.runState("enter");
+    });
+
+    btn.addEventListener("mouseleave", event {
+        btn.runState("leave");
     });
 
     return btn;

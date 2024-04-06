@@ -53,6 +53,7 @@ func createDrawer() {
         tm.setTile(0, 0, id);
         tm.anchor = @Vec2f.half;
         tm.position = @Vec2f(32f, 32f);
+        tm.tileSize = @Vec2f(32f, 32f);
 
         btn.addImage(tm);
 
