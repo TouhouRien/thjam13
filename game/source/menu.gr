@@ -5,6 +5,13 @@ export func menu() {
     var titleFont = initFont(3);
     var font = initFont(2);
 
+    var bg = @UIElement;
+    var bgImg = @Sprite("bg");
+    bgImg.anchor = @Vec2f.zero;
+    bg.addImage(bgImg)
+    bg.size = bgImg.size;
+    @UI.add(bg);
+
     var title = @UIElement;
     title.setAlign(UIAlignX.center, UIAlignY.top);
     title.position = @Vec2f(0f, 100f);
@@ -13,6 +20,26 @@ export func menu() {
     title.addImage(titleImg);
     title.size = titleImg.size;
     @UI.add(title);
+
+    task {
+        var frame = 0;
+        var dir = true;
+        loop yield {
+            if(frame >= 60) {
+                dir = !dir;
+                frame = 0;
+            }
+            var t : float;
+            if(dir) {
+                t = lerp(0.5f, 1.5f, ease(frame / 60f, Spline.sineInOut));
+            }
+            else {
+                t = lerp(1.5f, 0.5f, ease(frame / 60f, Spline.sineInOut));
+            }
+            title.scale = @Vec2f.one * t;
+            frame ++;
+        }
+    }();
 
 
     var vbox = @VBox;

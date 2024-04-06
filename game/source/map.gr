@@ -1,0 +1,61 @@
+
+class Cell {
+    var id: int;
+}
+
+class Map {
+    var grid: [[Cell]];
+    var width : uint;
+    var height : uint;
+    var entity : Entity;
+}
+
+var map: Map;
+
+func @Map() (Map) {
+    return @Map {};
+}
+
+export func initMap(width : uint, height: uint) {
+    map = @Map {
+        width = width;
+        height = height;
+    };
+
+    loop(y, height) {
+        var column: [Cell];
+
+        loop(x, width) {
+            column ~= @Cell {
+                id = 0;
+            };
+        }
+
+        map.grid ~= column;
+    }
+
+    var scene = @Scene;
+    scene.name = "level";
+
+    @Level.addScene(scene);
+    @Camera.setPosition(@App.center as<Vec2f>);
+
+    var tileset = @Tileset("terrain");
+    var tilemap = @Tilemap(tileset, width, height);
+    tilemap.anchor = @Vec2f.zero;
+
+    map.entity.addImage(tilemap);
+    scene.addEntity(map.entity);
+}
+
+export func setMapId(x: uint, y: uint, id: int) {
+    if(x >= map.width or y >= map.height)
+        return;
+    map.grid[x, y] = id;
+}
+
+export func getMapId(x: uint, y: uint) (int) {
+    if(x >= map.width or y >= map.height)
+        return;
+    return map.grid[x, y];
+}

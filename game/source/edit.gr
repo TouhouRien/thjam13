@@ -1,29 +1,14 @@
 import "util.gr"
-
-class Map {
-    var tilemap: Tilemap;
-}
+import "map.gr"
 
 export func editLevel() {
-    var scene = @Scene;
-    scene.name = "level";
-
-    @Level.addScene(scene);
-    @Camera.setPosition(@App.center as<Vec2f>);
-
-    var tileset = @Tileset("terrain");
-    var tilemap = @Tilemap(tileset, 32, 24);
-    tilemap.anchor = @Vec2f.zero;
-
-    var map = @Entity;
-    map.addImage(tilemap);
-    scene.addEntity(map);
+    initMap(15, 15);
 
     createDrawer();
 
     @Input.addAction("click");
     @Input.addActionEvent("click", @InputEvent.mouseButton(MouseButton.left, KeyState.pressed, 1, @Vec2f.zero, @Vec2f.zero));
-
+/*
     loop yield {
         if (@Input.isActionActivated("click")) {
             var x: int = (scene.mousePosition.x / tilemap.tileSize.x) as<int>;
@@ -31,7 +16,7 @@ export func editLevel() {
             //print(x ~","~ y as<int>);
             tilemap.setTile(x, y, 2);
         }
-    }
+    }*/
 }
 
 func createDrawer() {
