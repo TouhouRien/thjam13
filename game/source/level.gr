@@ -1,10 +1,13 @@
-
 export func initLevel() {
     var scene = @Scene;
     scene.name = "level";
-    @Level.addScene(scene);
 
-    var tilemap = @Tilemap("level1");
+    @Level.addScene(scene);
+    @Camera.setPosition(@App.center as<Vec2f>);
+
+    var tilemap = @Tilemap("level2");
+    tilemap.anchor = @Vec2f.zero;
+
     var map = @Entity;
     map.addImage(tilemap);
     scene.addEntity(map);
@@ -13,27 +16,43 @@ export func initLevel() {
     var width = tilemap.width;
     var height = tilemap.height;
 
-    print(tileSize.x);
-
     loop(y, height) {
         loop(x, width) {
             var tileId = tilemap.getTile(x, y);
 
-            if(tileId == 0) {
+            if(tileId > 1) {
                 var solid = @Solid;
-                solid.position = @Vec2i(x * tileSize.x as<int>, y * tileSize.y as<int>);
+                solid.position = @Vec2i(x * tileSize.x as<int>, y * tileSize.y as<int>) + @Vec2i(16, 16);
                 solid.hitbox = @Vec2i(16, 16);
+                solid.addTag(tileToName(tileId));
                 scene.addSolid(solid);
             }
         }
     }
 
     haniwa("mayumi", 0, 0, true);
-    haniwa("saki", 30, -100, false);
-    haniwa("seija", 50, -100, false);
+    haniwa("saki", 1, 0, false);
+    haniwa("seija", 2, 0, false);
+    haniwa("momoyo", 10, 11, false);
 }
 
+func as(vec: Vec2i)(Vec2f) {
+    return @Vec2f(vec.x, vec.y);
+}
 
+func tileToName(tileId: int)(string) {
+    switch(tileId)
+    case(0)
+        return "air";
+    case(1)
+        return "water";
+    case(2)
+        return "earth";
+    case(3)
+        return "rock";
+
+    return "";
+}
 
 func initInput() {
     @Input.addAction("up");
@@ -56,7 +75,9 @@ task haniwa(name: string, posX: int, posY: int, isPlayer: bool) {
 
     var scene = @Level.findSceneByName("level")?;
 
-    var startPosition = @Vec2i(posX, posY);
+    var startPosition = @Vec2i(posX * 32, (23 - posY) * 32);
+    startPosition.x += 16;
+    startPosition.y -= 16;
 
     var player = @Actor;
     player.position = startPosition;
@@ -71,6 +92,9 @@ task haniwa(name: string, posX: int, posY: int, isPlayer: bool) {
     sprite.position = @Vec2f(0, -4);
     entity.addImage(sprite);
 
+    var targetSpeedX = 1f;
+    var targetSpeedY = 5f;
+
     var speedX: float;
     var speedY: float;
     var isOnGround: bool;
@@ -79,10 +103,10 @@ task haniwa(name: string, posX: int, posY: int, isPlayer: bool) {
         if (isPlayer) {
             speedX = approach(speedX, @Input.getActionAxis("left", "right") * 3f, 0.5f);
         } else {
-            speedX = approach(speedX, 1f, 0.5f);
+            speedX = approach(speedX, targetSpeedX, 0.5f);
         }
 
-        speedY = approach(speedY, 5f, 0.5f);
+        speedY = approach(speedY, targetSpeedY, 0.5f);
 
         if (@Input.isActionActivated("restart")) {
             player.position = startPosition;
@@ -106,6 +130,11 @@ task haniwa(name: string, posX: int, posY: int, isPlayer: bool) {
             if (collision.direction.y > 0) {
                 isOnGround = true;
                 player.mount(collision.solid);
+
+                var block = collision.solid;
+                if (name == "momoyo" && block.hasTag("rock")) {
+                    targetSpeedX = 0f;
+                }
             } else {
                 isOnGround = false;
             }
