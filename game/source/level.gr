@@ -13,17 +13,17 @@ class Haniwa {
 }
 
 func initHaniwa(scene: Scene, map: Map, name: string, startPos: Vec2i)(Haniwa) {
-    var entity = @Entity;
-    scene.addEntity(entity);
-
-    var animation = @Animation(name);
-    entity.addImage(animation);
-
     var actor = @Actor;
     actor.position = mapToWorldPosition(map, startPos);
-    actor.hitbox = animation.size as<Vec2i> / 2;
-    actor.entity = entity;
     scene.addActor(actor);
+
+    var entity = @Entity;
+    scene.addEntity(entity);
+    actor.entity = entity;
+
+    var animation = @Animation(name);
+    actor.hitbox = animation.size as<Vec2i> / 2;
+    entity.addImage(animation);
 
     var haniwa = @Haniwa {
         entity = entity;
@@ -37,6 +37,12 @@ func initHaniwa(scene: Scene, map: Map, name: string, startPos: Vec2i)(Haniwa) {
 }
 
 export func initLevel() {
+    var music = @Music("tinyClayBuddies");
+    music.play();
+
+    var freezeSFX = @Sound("freeze");
+    freezeSFX.play();
+
     var tilemap = @Tilemap("level1");
     var map = initMap(tilemap, tilemap.width, tilemap.height);
 
@@ -45,8 +51,14 @@ export func initLevel() {
 
     initInput();
 
-    var mayumi = initHaniwa(scene, map, "mayumi", @Vec2i(0, 1));
-    //updateHaniwa(mayumi);
+    var mayumi = initHaniwa(scene, map, "mayumi", @Vec2i(0, 9));
+    updateHaniwa(mayumi);
+    var seija = initHaniwa(scene, map, "seija", @Vec2i(1, 9));
+    updateHaniwa(seija);
+    var cirno = initHaniwa(scene, map, "cirno", @Vec2i(2, 9));
+    updateHaniwa(cirno);
+    var saki = initHaniwa(scene, map, "saki", @Vec2i(3, 9));
+    updateHaniwa(saki);
 }
 
 func initInput() {
@@ -88,7 +100,6 @@ task updateHaniwa(haniwa: Haniwa) {
         var collision = haniwa.actor.moveY(haniwa.speed.y);
         if (collision) {
             var collision = collision?;
-            var block     = collision.solid;
 
             if (collision.direction.y > 0) {
                 haniwa.onGround = true;
@@ -104,7 +115,7 @@ task updateHaniwa(haniwa: Haniwa) {
     }
 }
 
-task cirno(haniwa: Haniwa) {
+task updateCirno(haniwa: Haniwa) {
     loop yield {
         var tilePos = worldToMapPosition(map, haniwa.actor.position);
     }

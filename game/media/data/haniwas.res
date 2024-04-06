@@ -41,3 +41,13 @@ animation "momoyo" {
     lines 1
     columns 2
 }
+
+animation "seija" {
+    texture "haniwas"
+    clip 0 256 64 64
+    frameTime 10
+    frames [0 1]
+    repeat true
+    lines 1
+    columns 2
+}

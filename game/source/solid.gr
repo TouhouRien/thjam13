@@ -1,11 +1,9 @@
 import "map.gr"
 
-export func addSolid(scene: Scene, mapSize: Vec2i, tilePos: Vec2i, tileId: int)(Solid) {
-    var halfSize = mapSize / 2;
-
+export func addSolid(scene: Scene, worldPos: Vec2i, hitbox: Vec2i, tileId: int)(Solid) {
     var solid = @Solid;
-    solid.position = @Vec2i(tilePos.x * mapSize.x, tilePos.y * mapSize.y) + halfSize;
-    solid.hitbox = halfSize;
+    solid.position = worldPos;
+    solid.hitbox = hitbox;
     solid.addTag(tileId as<TileName> as<string>);
     scene.addSolid(solid);
 
