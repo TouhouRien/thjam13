@@ -1,5 +1,16 @@
 import "level.gr"
 
 event app {
+    debug();
     initLevel();
+}
+
+task debug() {
+    loop yield {
+        if(@Input.isPressed(KeyButton.f5))
+            @App.reload(true, true);
+
+        if(@Input.isPressed(KeyButton.escape))
+            @App.close();
+    }
 }
