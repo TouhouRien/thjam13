@@ -43,10 +43,10 @@ export func initLevel() {
     var scene = @Level.findSceneByName("level")?;
     updateMap(scene, map);
 
-    /*initInput();
+    initInput();
 
     var mayumi = initHaniwa(scene, map, "mayumi", @Vec2i(0, 1));
-    updateHaniwa(mayumi);*/
+    //updateHaniwa(mayumi);
 }
 
 func initInput() {

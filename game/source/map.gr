@@ -37,10 +37,10 @@ export func initMap(tilemap: Tilemap, width: uint, height: uint)(Map) {
     };
     map.tilemap.anchor = @Vec2f.zero;
 
-    loop(y, height) {
+    loop(x, width) {
         var column: [Cell];
 
-        loop(x, width) {
+        loop(y, height) {
             column ~= @Cell {
                 id = 0;
             };
@@ -72,11 +72,11 @@ export func isSolid(cell: Cell)(bool) {
 
 export task updateMap(scene: Scene, map: Map) {
     loop yield {
-        loop (y, map.height) {
-            loop (x, map.width) {
+        loop (x, map.width) {
+            loop (y, map.height) {
                 var cell = map.grid[x][y];
 
-                /*if (isSolid(cell) && !cell.solid) {
+                if (isSolid(cell) && !cell.solid) {
                     cell.solid = addSolid(scene, @Vec2i(map.width, map.height), @Vec2i(x, y), cell.id);
                 }
 
@@ -84,7 +84,7 @@ export task updateMap(scene: Scene, map: Map) {
                     var solid = cell.solid?;
                     solid.remove();
                     cell.solid = null;
-                }*/
+                }
             }
         }
     }
