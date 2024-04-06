@@ -1,3 +1,7 @@
 export func as(vec: Vec2i)(Vec2f) {
     return @Vec2f(vec.x, vec.y);
 }
+
+export func as(vec: Vec2f)(Vec2i) {
+    return @Vec2i(vec.x as<int>, vec.y as<int>);
+}

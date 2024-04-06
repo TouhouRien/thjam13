@@ -31,3 +31,13 @@ animation "saki" {
     lines 1
     columns 2
 }
+
+animation "momoyo" {
+    texture "haniwas"
+    clip 0 192 64 64
+    frameTime 10
+    frames [0 1]
+    repeat true
+    lines 1
+    columns 2
+}

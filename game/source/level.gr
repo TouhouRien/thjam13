@@ -1,139 +1,52 @@
+import "map.gr"
+import "solid.gr"
 import "util.gr"
 
-var tileSetSize = 64;
-var tileSetHalfSize = tileSetSize / 2;
+class Haniwa {
+    var entity: Entity;
+    var animation: Animation;
+    var actor: Actor;
+    var targetSpeed: Vec2f;
+    var speed: Vec2f;
+    var isPlayer: bool;
+    var onGround: bool;
+}
+
+func initHaniwa(scene: Scene, map: Map, name: string, startPos: Vec2i)(Haniwa) {
+    var entity = @Entity;
+    scene.addEntity(entity);
+
+    var animation = @Animation(name);
+    entity.addImage(animation);
+
+    var actor = @Actor;
+    actor.position = mapToWorldPosition(map, startPos);
+    actor.hitbox = animation.size as<Vec2i> / 2;
+    actor.entity = entity;
+    scene.addActor(actor);
+
+    var haniwa = @Haniwa {
+        entity = entity;
+        animation = animation;
+        actor = actor;
+        targetSpeed = @Vec2f(1f, 5f);
+        speed = @Vec2f.zero;
+    };
+
+    return haniwa;
+}
 
 export func initLevel() {
-    var scene = @Scene;
-    scene.name = "level";
+    var tilemap = @Tilemap("level1");
+    var map = initMap(tilemap, tilemap.width, tilemap.height);
 
-    @Level.addScene(scene);
-    @Camera.setPosition(@App.center as<Vec2f>);
-    
-    var gamebg = @Sprite("gamebg");
-    gamebg.anchor = @Vec2f.zero;
+    var scene = @Level.findSceneByName("level")?;
+    updateMap(scene, map);
 
-    var tilemap = @Tilemap("level2");
-    tilemap.anchor = @Vec2f.zero;
+    /*initInput();
 
-    var map = @Entity;
-    map.addImage(gamebg);
-    map.addImage(tilemap);
-    scene.addEntity(map);
-
-    var width = tilemap.width;
-    var height = tilemap.height;
-
-    loop (y, height) {
-        loop (x, width) {
-            var tileId = tilemap.getTile(x, y);
-
-            if (isSolid(tileId)) {
-                var solid = addSolid(scene, tilemap, @Vec2i(x, y), tileId);
-
-                var nextTileId = tilemap.getTile(x + 1, y);
-                if (!isSolid(nextTileId)) {
-                    solid.addTag("stop");
-                }
-
-                var belowTileId = tilemap.getTile(x - 1, y - 1);
-                var startTileId = tilemap.getTile(x - 1, y - 2);
-                if (!isSolid(belowTileId) && !isSolid(startTileId)) {
-                    var startTile = addSolid(scene, tilemap, @Vec2i(x - 1, y - 2), tileId);
-                    startTile.addTag("start");
-                }
-            }
-        }
-    }
-
-    initInput();
-
-    haniwa(scene, tilemap, "mayumi", 0, 0, false);
-    haniwa(scene, tilemap, "cirno", 2, 0, false);
-    haniwa(scene, tilemap, "saki", 3, 0, false);
-
-    goal(scene, 15, 0);
-
-    /*haniwa(scene, tilemap, "seija", 1, 0, false);
-    haniwa(scene, tilemap, "momoyo", 10, 11, false);*/
-}
-
-func addSolid(scene: Scene, tilemap: Tilemap, tilePos: Vec2i, tileId: int)(Solid) {
-    var tileSize = tilemap.tileSize;
-
-    var solid = @Solid;
-    solid.position = @Vec2i(tilePos.x * tileSize.x as<int>, tilePos.y * tileSize.y as<int>) + @Vec2i(tileSetHalfSize, tileSetHalfSize);
-    solid.hitbox = @Vec2i(tileSetHalfSize, tileSetHalfSize);
-    solid.addTag(tileToName(tileId));
-    scene.addSolid(solid);
-
-    return solid;
-}
-
-func isSolid(tileId: int)(bool) {
-    return tileId > 1;
-}
-
-func tileToName(tileId: int)(string) {
-    switch(tileId)
-    case(0)
-        return "air";
-    case(1)
-        return "water";
-    case(2)
-        return "earth";
-    case(3)
-        return "rock";
-    case(4)
-        return "ice";
-    case(6)
-        return "obstacle";
-
-    return "";
-}
-
-func nameToTileId(name: string)(int) {
-    switch(name)
-    case("air")
-        return 0;
-    case("water")
-        return 1;
-    case("earth")
-        return 2;
-    case("rock")
-        return 3;
-    case("ice")
-        return 4;
-    case("obstacle")
-        return 6;
-
-    return -1;
-}
-
-func tilePositionWorldToTilemap(tilemap: Tilemap, vec: Vec2i)(Vec2i) {
-    var noOffset = @Vec2i(vec.x - tileSetHalfSize, vec.y - tileSetHalfSize);
-    var noSize   = @Vec2i(noOffset.x / tileSetSize, noOffset.y / tileSetSize);
-    return noSize;
-}
-
-func waterToIce(scene: Scene, tilemap: Tilemap, tilePos: Vec2i, tileId: int) {
-    var isWater = false;
-    var nextPos = @Vec2i(tilePos.x + 1, tilePos.y);
-
-    do {
-        var nextId = getTile(tilemap, nextPos.x, nextPos.y);
-
-        if (tileToName(nextId) == "water") {
-            var iceId = nameToTileId("ice");
-            setTile(tilemap, nextPos.x, nextPos.y, iceId);
-            addSolid(scene, tilemap, nextPos, iceId);
-            isWater = true;
-        } else {
-            isWater = false;
-        }
-
-        nextPos = @Vec2i(nextPos.x + 1, nextPos.y);
-    } while (isWater);
+    var mayumi = initHaniwa(scene, map, "mayumi", @Vec2i(0, 1));
+    updateHaniwa(mayumi);*/
 }
 
 func initInput() {
@@ -142,136 +55,79 @@ func initInput() {
     @Input.addAction("left");
     @Input.addAction("right");
     @Input.addAction("jump");
-    @Input.addAction("restart");
     
     @Input.addActionEvent("up", @InputEvent.keyButton(KeyButton.up, KeyState.pressed));
     @Input.addActionEvent("down", @InputEvent.keyButton(KeyButton.down, KeyState.pressed));
     @Input.addActionEvent("left", @InputEvent.keyButton(KeyButton.left, KeyState.pressed));
     @Input.addActionEvent("right", @InputEvent.keyButton(KeyButton.right, KeyState.pressed));
     @Input.addActionEvent("jump", @InputEvent.keyButton(KeyButton.space, KeyState.pressed));
-    @Input.addActionEvent("restart", @InputEvent.keyButton(KeyButton.r, KeyState.pressed));
 }
 
-task haniwa(scene: Scene, tilemap: Tilemap, name: string, posX: int, posY: int, isPlayer: bool) {
-    var startPosition = @Vec2i(posX * tileSetSize, (11 - posY) * tileSetSize);
-    startPosition.x += tileSetHalfSize;
-    startPosition.y -= tileSetHalfSize;
-
-    var player = @Actor;
-    player.position = startPosition;
-    player.hitbox = @Vec2i(tileSetHalfSize, tileSetHalfSize);
-    scene.addActor(player);
-
-    var entity = @Entity;
-    scene.addEntity(entity);
-    player.entity = entity;
-
-    var animation = @Animation(name);
-    entity.addImage(animation);
-
-    var targetSpeedX = 1f;
-    var targetSpeedY = 5f;
-
-    var speedX: float;
-    var speedY: float;
-    var isOnGround: bool;
-
+task updateHaniwa(haniwa: Haniwa) {
     loop yield {
-        if (isPlayer) {
-            speedX = approach(speedX, @Input.getActionAxis("left", "right") * 3f, 0.5f);
+        if (haniwa.isPlayer) {
+            haniwa.speed.x = approach(haniwa.speed.x, @Input.getActionAxis("left", "right") * 3f, 0.5f);
         } else {
-            speedX = approach(speedX, targetSpeedX, 0.5f);
+            haniwa.speed.x = approach(haniwa.speed.x, haniwa.targetSpeed.x, 0.5f);
         }
 
-        speedY = approach(speedY, targetSpeedY, 0.5f);
+        haniwa.speed.y = approach(haniwa.speed.y, haniwa.targetSpeed.y, 0.5f);
 
-        if (@Input.isActionActivated("restart")) {
-            player.position = startPosition;
-        }
-
-        if (isOnGround) {
-            if (isPlayer && @Input.isActionActivated("jump")) {
-                player.dismount();
-                isOnGround = false;
-                targetSpeedY = -10f;
+        if (haniwa.onGround) {
+            if (haniwa.isPlayer && @Input.isActionActivated("jump")) {
+                haniwa.actor.dismount();
+                haniwa.onGround = false;
+                haniwa.targetSpeed.y = -10f;
             }
         }
 
-        var collision = player.moveX(speedX);
+        var collision = haniwa.actor.moveX(haniwa.speed.x);
         if (collision) {
-            var collision = collision?;
-            var block     = collision.solid;
-
-            if (name == "seija" && block.hasTag("obstacle")) {
-                // Retourner obstacle
-            }
         }
 
-        var collision = player.moveY(speedY);
+        var collision = haniwa.actor.moveY(haniwa.speed.y);
         if (collision) {
             var collision = collision?;
             var block     = collision.solid;
 
             if (collision.direction.y > 0) {
-                isOnGround = true;
-                player.mount(collision.solid);
-
-                // Recupere l'id du block
-                var tilePos = tilePositionWorldToTilemap(tilemap, block.position);
-                var tileId  = getTile(tilemap, tilePos.x, tilePos.y);
-
-                if (name == "momoyo" && block.hasTag("rock")) {
-                    targetSpeedX = 0f;
-                    setTile(tilemap, tilePos.x, tilePos.y, nameToTileId("air"));
-                    block.remove();
-                }
-
-                // Saki saute en rencontrant du vide
-                if (name == "saki") {
-                    if (block.hasTag("stop")) {
-                        targetSpeedX = 0f;
-                        targetSpeedY = -10f;
-                    } else {
-                        targetSpeedY = 5f;
-                    }
-                }
-
-                // Cirno s'arrete en rencontrant du vide et transforme le prochain bloc en glace si c'est de l'eau
-                if (name == "cirno" && block.hasTag("stop")) {
-                    targetSpeedX = 0f;
-                    waterToIce(scene, tilemap, tilePos, tileId);
-                }
-            } else {
-                // Saki apres un saut trouve la prochaine plateforme
-                if (name == "saki" && block.hasTag("start")) {
-                    targetSpeedY = 0.4f;
-                    targetSpeedX = 1f;
-                }
+                haniwa.onGround = true;
+                haniwa.actor.mount(collision.solid);
             }
 
             if (collision.direction.y < 0) {
-                speedY = 0f;
+                haniwa.targetSpeed.y = 0f;
             }
         } else {
-            isOnGround = false;
+            haniwa.onGround = false;
         }
     }
 }
 
-task goal(scene: Scene, posX: int, posY: int) {
-    var startPosition = @Vec2i(posX * tileSetSize, (11 - posY) * tileSetSize);
-    startPosition.x += tileSetHalfSize;
-    startPosition.y -= tileSetHalfSize;
+task cirno(haniwa: Haniwa) {
+    loop yield {
+        var tilePos = worldToMapPosition(map, haniwa.actor.position);
+    }
+}
+
+func goal(scene: Scene, posX: int, posY: int) {
+    var animation = @Animation("goal");
+
+    var tileSize = animation.size as<Vec2i>;
+    var halfSize = tileSize / 2;
+
+    var startPosition = @Vec2i(posX * tileSize.x, (11 - posY) * tileSize.y);
+    startPosition.x += halfSize.x;
+    startPosition.y -= halfSize.y;
 
     var target = @Actor;
     target.position = startPosition;
-    target.hitbox = @Vec2i(tileSetHalfSize, tileSetHalfSize);
+    target.hitbox = halfSize;
     scene.addActor(target);
 
     var entity = @Entity;
     scene.addEntity(entity);
     target.entity = entity;
 
-    var animation = @Animation("goal");
     entity.addImage(animation);
 }

@@ -15,18 +15,6 @@ tileset "terrain" {
 
 tilemap "level1" {
     tileset "terrain"
-    size 32 24
-    tiles [
-        [1 1 0 0 1]
-        [0 1 0 0 1]
-        [1 1 0 0 1]
-        [0 1 1 0 0]
-        [0 0 0 0 0]
-    ]
-}
-
-tilemap "level2" {
-    tileset "terrain"
     size 16 12
     tiles [
         [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
