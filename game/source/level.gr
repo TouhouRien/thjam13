@@ -192,6 +192,9 @@ task haniwa(scene: Scene, tilemap: Tilemap, name: string, posX: int, posY: int, 
 
         var collision = player.moveX(speedX);
         if (collision) {
+            var collision = collision?;
+            var block     = collision.solid;
+
             if (name == "seija" && block.hasTag("obstacle")) {
                 // Retourner obstacle
             }
@@ -249,5 +252,5 @@ task haniwa(scene: Scene, tilemap: Tilemap, name: string, posX: int, posY: int, 
 }
 
 task flip() {
-    
+
 }
