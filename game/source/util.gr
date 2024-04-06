@@ -1,0 +1,3 @@
+export func as(vec: Vec2i)(Vec2f) {
+    return @Vec2f(vec.x, vec.y);
+}

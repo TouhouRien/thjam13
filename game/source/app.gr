@@ -2,6 +2,8 @@ import "level.gr"
 import "menu.gr"
 
 event app {
+    @App.setScaling(Scaling.fit);
+    @App.setPixelSharpness(2);
     debug();
     menu();
 }

@@ -1,3 +1,5 @@
+import "util.gr"
+
 export func initLevel() {
     var scene = @Scene;
     scene.name = "level";
@@ -34,10 +36,6 @@ export func initLevel() {
     haniwa("saki", 1, 0, false);
     haniwa("seija", 2, 0, false);
     haniwa("momoyo", 10, 11, false);
-}
-
-func as(vec: Vec2i)(Vec2f) {
-    return @Vec2f(vec.x, vec.y);
 }
 
 func tileToName(tileId: int)(string) {

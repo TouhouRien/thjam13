@@ -1,0 +1,52 @@
+import "util.gr"
+
+class Map {
+    var tilemap: Tilemap;
+}
+
+export func editLevel() {
+    var scene = @Scene;
+    scene.name = "level";
+
+    @Level.addScene(scene);
+    @Camera.setPosition(@App.center as<Vec2f>);
+
+    var tileset = @Tileset("terrain");
+    var tilemap = @Tilemap(tileset, 32, 24);
+    tilemap.anchor = @Vec2f.zero;
+
+    var map = @Entity;
+    map.addImage(tilemap);
+    scene.addEntity(map);
+
+    createDrawer();
+
+    @Input.addAction("click");
+    @Input.addActionEvent("click", @InputEvent.mouseButton(MouseButton.left, KeyState.pressed, 1, @Vec2f.zero, @Vec2f.zero));
+
+    loop yield {
+        if (@Input.isActionActivated("click")) {
+            var x: int = (scene.mousePosition.x / tilemap.tileSize.x) as<int>;
+            var y: int = (scene.mousePosition.y / tilemap.tileSize.y) as<int>;
+            //print(x ~","~ y as<int>);
+            tilemap.setTile(x, y, 2);
+        }
+    }
+}
+
+func createDrawer() {
+    var width = 400f;
+    var height = 100f;
+
+    var drawer = @UIElement;
+    drawer.size = @Vec2f(width, height);
+    drawer.setAlign(UIAlignX.center, UIAlignY.bottom);
+    drawer.position = @Vec2f(0f, 35f);
+
+    var bg = @RoundedRectangle.fill(width, height, 8f);
+    bg.anchor = @Vec2f.zero;
+    bg.color = @Color(0.08f, 0.11f, 0.18f);
+    drawer.addImage(bg);
+
+    @UI.add(drawer);
+}
