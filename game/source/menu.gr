@@ -4,6 +4,9 @@ import "edit.gr"
 export func menu() {
     var font = initFont(2);
 
+    var music = @Music("tinyClayBuddies");
+    music.playTrack(2f);
+
     var bg = @UIElement;
     var bgImg = @Sprite("bg");
     bgImg.anchor = @Vec2f.zero;

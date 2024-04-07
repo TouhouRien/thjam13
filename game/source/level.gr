@@ -80,12 +80,8 @@ export func initLevel(levelCount: int) {
         haniwaTypeSpawned ~= false;
     }
 
-    var levelName = "test";
-    //var levelName = "level" ~ (levelCount as<string>);
+    var levelName = "level" ~ (levelCount as<string>);
     var goalPos = @Vec2i.zero;
-
-    var music = @Music("tinyClayBuddies");
-    music.playTrack(2f);
 
     var tilemap = @Tilemap(levelName);
     var map = initMap(tilemap, tilemap.width, tilemap.height);
@@ -119,10 +115,12 @@ export func initLevel(levelCount: int) {
     haniwaSpawner(scene, map, goal, spawnAreas, false);
 
     loop yield {
-        /*if(@Input.isDown(KeyButton.space)) {
+        if (@Input.isDown(KeyButton.space)) {
             won = true;
-        }*/
-        if(won) {
+            win();
+        }
+
+        if (won) {
             wait(5);
             won = false;
 
@@ -150,6 +148,7 @@ export func initLevel(levelCount: int) {
             @UI.add(transition);
             wait(30);
 
+            scene.remove();
             initLevel(levelCount + 1);
         }
     }
@@ -642,15 +641,19 @@ task updateSeija(scene: Scene, map: Map, haniwa: Haniwa) {
     }
 }
 
+func win() {
+    var winSFX = @Sound("win");
+    winSFX.play();
+    won = true;
+}
+
 task updateGoal(map: Map, player: Haniwa, goal: Goal) {
     loop yield {
         var playerPos = worldToMapPosition(map, player.actor.position + player.offset);
         var goalPos   = worldToMapPosition(map, goal.actor.position);
 
         if (!won && playerPos.x == goalPos.x && playerPos.y == goalPos.y) {
-            var winSFX = @Sound("win");
-            winSFX.play();
-            won = true;
+            win();
             die;
         }
     }
