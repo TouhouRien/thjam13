@@ -50,7 +50,7 @@ export func menu() {
     var startBtn = createButton(@Sprite("start"));
     startBtn.addEventListener("click", event {
         @UI.clear();
-        initLevel();
+        initLevel(1);
     });
     vbox.addUI(startBtn);
 
