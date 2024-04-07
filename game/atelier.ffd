@@ -1,10 +1,11 @@
-default "game"
-config "game" {
+default "haniwa_vs_world"
+config "haniwa_vs_world" {
     source "app.gr"
     media "data" true
+    export "haniwa_vs_world"
     window {
         size 1024 768
-        title "game"
+        title "haniwa_vs_world"
         icon "data/icon.png"
     }
 }

@@ -47,6 +47,11 @@ export func initLevel() {
         haniwaTypeSpawned ~= false;
     }
 
+    spawnAreas ~= @Vec2i(1, 8);
+    spawnAreas ~= @Vec2i(2, 8);
+    spawnAreas ~= @Vec2i(3, 8);
+    spawnAreas ~= @Vec2i(6, 3);
+
     var music = @Music("tinyClayBuddies");
     music.playTrack(2f);
 
@@ -58,17 +63,42 @@ export func initLevel() {
 
     var goal = initGoal(scene, map, @Vec2i(15, 5));
 
-    createDrawer(scene, map, goal);
+    haniwaSpawner(scene, map, goal);
 }
 
-func createDrawer(scene: Scene, map: Map, goal: Goal) {
+var currentDrawer: UIElement?;
+func createDrawer(scene: Scene, map: Map, goal: Goal, spawnTile: Vec2i) {
     var width = 700f;
     var height = 100f;
+
+    if(currentDrawer) {
+        var drawer = currentDrawer?;
+        drawer.isEnabled = false;
+        drawer.runState("hidden");
+        wait(30);
+        drawer.remove();
+    }
 
     var drawer = @UIElement;
     drawer.size = @Vec2f(width, height);
     drawer.setAlign(UIAlignX.center, UIAlignY.bottom);
     drawer.position = @Vec2f(0f, 35f);
+    currentDrawer = drawer;
+
+    var visibleState = @UIState("visible");
+    visibleState.time = 30;
+    visibleState.spline = Spline.sineInOut;
+    drawer.addState(visibleState);
+
+    var hiddenState = @UIState("hidden");
+    hiddenState.alpha = 0f;
+    hiddenState.offset = @Vec2f(0f, -50f);
+    hiddenState.time = 30;
+    hiddenState.spline = Spline.sineInOut;
+    drawer.addState(hiddenState);
+
+    drawer.setState("hidden");
+    drawer.runState("visible");
 
     var bg = @RoundedRectangle.fill(width, height, 8f);
     bg.anchor = @Vec2f.zero;
@@ -79,9 +109,34 @@ func createDrawer(scene: Scene, map: Map, goal: Goal) {
     hbox.spacing = 16f;
     drawer.addUI(hbox);
 
+    {
+        var exitBtn = @UIElement;
+        var sprite = @Sprite("exitbtn");
+        sprite.anchor = @Vec2f.zero;
+        exitBtn.size = sprite.size;
+        exitBtn.addImage(sprite);
+        exitBtn.setAlign(UIAlignX.right, UIAlignY.top);
+        exitBtn.position = @Vec2f(32f, 32f);
+        exitBtn.addEventListener("click", event {
+            drawer.isEnabled = false;
+            drawer.runState("hidden");
+            wait(30);
+            drawer.remove();
+        });
+        drawer.addUI(exitBtn);
+    }
+
     for(type, haniwaTypeList) {
+        var haniwaType = type as<HaniwaType>;
+        if(haniwaTypeSpawned[haniwaType as<int>])
+            continue;
+
         var btn = @UIElement;
-        btn.size = @Vec2f(64, 64f);
+        btn.size = @Vec2f(100f, 100f);
+
+        var nameSprite = @Sprite(type ~ ".name");
+        nameSprite.anchor = @Vec2f(0.5f, 1f);
+        nameSprite.position = @Vec2f(btn.size.x / 2f, btn.size.y);
 
         var rect = @RoundedRectangle.fill(btn.size.x, btn.size.y, 8f);
         rect.anchor = @Vec2f.zero;
@@ -93,51 +148,83 @@ func createDrawer(scene: Scene, map: Map, goal: Goal) {
         sprite.position = @Vec2f(32f, 32f);
 
         btn.addImage(sprite);
+        btn.addImage(nameSprite);
 
         btn.addEventListener("click", event {
+            if(haniwaTypeSpawned[haniwaType as<int>])
+                return;
+            
+            haniwaTypeSpawned[haniwaType as<int>] = true;
+            var haniwa = initHaniwa(scene, map, type, spawnTile, true);
+            haniwas ~= haniwa;
+            updateHaniwa(map, haniwa);
+            
             switch(type)
             case("mayumi") {
-                var mayumi = initHaniwa(scene, map, "mayumi", @Vec2i(0, 8), true);
-                haniwas ~= mayumi;
-                updateHaniwa(map, mayumi);
-                updateJump(scene, map, mayumi);
-                updateGoal(map, mayumi, goal);
+                updateJump(scene, map, haniwa);
+                updateGoal(map, haniwa, goal);
             }
             case("seija") {
-                var seija = initHaniwa(scene, map, "seija", @Vec2i(1, 8), false);
-                haniwas ~= seija;
-                updateHaniwa(map, seija);
-                updateSeija(scene, map, seija);
+                updateSeija(scene, map, haniwa);
             }
             case("cirno") {
-                var cirno = initHaniwa(scene, map, "cirno", @Vec2i(2, 8), false);
-                haniwas ~= cirno;
-                updateHaniwa(map, cirno);
-                updateCirno(scene, map, cirno);
+                updateCirno(scene, map, haniwa);
             }
             case("saki") {
-                var saki = initHaniwa(scene, map, "saki", @Vec2i(3, 8), false);
-                haniwas ~= saki;
-                updateHaniwa(map, saki);
-                updateSaki(scene, map, saki);
+                updateSaki(scene, map, haniwa);
             }
             case("momoyo") {
-                var momoyo = initHaniwa(scene, map, "momoyo", @Vec2i(6, 3), false);
-                haniwas ~= momoyo;
-                updateHaniwa(map, momoyo);
-                updateMomoyo(scene, map, momoyo);
+                updateMomoyo(scene, map, haniwa);
             }
+
+            drawer.isEnabled = false;
+            drawer.runState("hidden");
+            wait(30);
+            drawer.remove();
+            currentDrawer = null;
         });
         btn.addEventListener("mouseenter", event {
-        rect.color = @Color.blue;
+            rect.color = @Color.blue;
         });
         btn.addEventListener("mouseleave", event {
-        rect.color = @Color.red;
+            rect.color = @Color.red;
         });
         hbox.addUI(btn);
     }
 
     @UI.add(drawer);
+}
+
+func haniwaSpawner(scene: Scene, map: Map, goal: Goal) {
+    for(area, spawnAreas) {
+        var btn = @UIElement;
+        btn.size = @Vec2f(64f, 64f);
+        btn.position = (area * 64 - 32) as<Vec2f>;
+
+        var rect = @RoundedRectangle.fill(btn.size.x - 2f, btn.size.y - 2f, 8f);
+        rect.anchor = @Vec2f.half;
+        rect.position = btn.size / 2f;
+        rect.color = @Color.red;
+        rect.isVisible = false;
+        btn.addImage(rect);
+
+        var sprite = @Sprite("cursor");
+        sprite.anchor = @Vec2f.zero;
+        btn.addImage(sprite);
+
+        scene.addUI(btn);
+
+        btn.addEventListener("click", event {
+            createDrawer(scene, map, goal, area);
+        });
+
+        btn.addEventListener("mouseenter", event {
+            rect.isVisible = true;
+        });
+        btn.addEventListener("mouseleave", event {
+            rect.isVisible = false;
+        });
+    }
 }
 
 func initHaniwa(scene: Scene, map: Map, name: string, startPos: Vec2i, turnedOn: bool)(Haniwa) {

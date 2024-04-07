@@ -54,12 +54,12 @@ export func menu() {
     });
     vbox.addUI(startBtn);
 
-    var editBtn = createButton("Level Editor", font);
+    /*var editBtn = createButton("Level Editor", font);
     editBtn.addEventListener("click", event {
         @UI.clear();
         editLevel();
     });
-    vbox.addUI(editBtn);
+    vbox.addUI(editBtn);*/
 
     var exitBtn = createButton(@Sprite("exit"));
     exitBtn.addEventListener("click", event {
