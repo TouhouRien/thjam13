@@ -153,6 +153,15 @@ func createDrawer(scene: Scene, map: Map, goal: Goal, spawnTile: Vec2i) {
         btn.addEventListener("click", event {
             if(haniwaTypeSpawned[haniwaType as<int>])
                 return;
+
+            var areas: [Vec2i];
+            for(area, spawnAreas) {
+                if(area.x != spawnTile.x || area.y != spawnTile.y) {
+                    areas ~= area;
+                }
+            }
+            spawnAreas = areas;
+            haniwaSpawner(scene, map, goal);
             
             haniwaTypeSpawned[haniwaType as<int>] = true;
             var haniwa = initHaniwa(scene, map, type, spawnTile, true);
@@ -196,6 +205,8 @@ func createDrawer(scene: Scene, map: Map, goal: Goal, spawnTile: Vec2i) {
 }
 
 func haniwaSpawner(scene: Scene, map: Map, goal: Goal) {
+    scene.clearUI();
+
     for(area, spawnAreas) {
         var btn = @UIElement;
         btn.size = @Vec2f(64f, 64f);
