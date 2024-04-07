@@ -112,9 +112,9 @@ export func initLevel(levelCount: int) {
     haniwaSpawner(scene, map, goal, spawnAreas, false);
 
     loop yield {
-        if(@Input.isDown(KeyButton.space)) {
+        /*if(@Input.isDown(KeyButton.space)) {
             won = true;
-        }
+        }*/
         if(won) {
             wait(5);
             won = false;
