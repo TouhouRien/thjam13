@@ -14,6 +14,7 @@ var haniwaTypeSpawned: [bool];
 var spawnAreas: [Vec2i];
 var haniwas: [Haniwa];
 var won = false;
+var toSpawnSize = 0;
 
 class Haniwa {
     var entity: Entity;
@@ -79,7 +80,8 @@ export func initLevel(levelCount: int) {
         haniwaTypeSpawned ~= false;
     }
 
-    var levelName = "level" ~ (levelCount as<string>);
+    var levelName = "test";
+    //var levelName = "level" ~ (levelCount as<string>);
     var goalPos = @Vec2i.zero;
 
     var music = @Music("tinyClayBuddies");
@@ -88,9 +90,9 @@ export func initLevel(levelCount: int) {
     var tilemap = @Tilemap(levelName);
     var map = initMap(tilemap, tilemap.width, tilemap.height);
 
-    if (levelName == "testSaki") {
-        spawnAreas ~= @Vec2i(1, 1);
-        goalPos = @Vec2i(4, 1);
+    if (levelName == "test") {
+        spawnAreas ~= @Vec2i(6, 8);
+        goalPos = @Vec2i(15, 8);
     }
     if (levelName == "level1") {
         spawnAreas ~= @Vec2i(1, 8);
@@ -107,6 +109,7 @@ export func initLevel(levelCount: int) {
         spawnAreas ~= @Vec2i(9, 3);
         goalPos = @Vec2i(15, 5);
     }
+    toSpawnSize = spawnAreas.size();
 
     var scene = @Level.findSceneByName("level")?;
     updateMap(scene, map);
@@ -254,7 +257,7 @@ func createDrawer(scene: Scene, map: Map, goal: Goal, spawnTile: Vec2i) {
 
             // Le dernier haniwa bouge
             var turnedOn = false;
-            if (haniwas.size == spawnAreas.size) {
+            if (haniwas.size + 1 == toSpawnSize) {
                 turnedOn = true;
             }
 
@@ -442,7 +445,7 @@ task updateHaniwa(map: Map, haniwa: Haniwa) {
         }
 
         var collision = haniwa.actor.moveX(haniwa.speed.x);
-        if (collision && haniwa.onGround) {
+        if (collision && haniwa.onGround && !haniwa.isJumping) {
             haniwa.speed.x = 0f;
             haniwa.targetSpeed.x = -haniwa.targetSpeed.x;
             haniwa.animation.flipX = !haniwa.animation.flipX;
@@ -513,7 +516,7 @@ task updateCirno(scene: Scene, map: Map, haniwa: Haniwa) {
 }
 
 task updateSaki(scene: Scene, map: Map, haniwa: Haniwa) {
-    updateJump(scene, map, haniwa);
+    var beforeJumpPos = @Vec2i.zero;
 
     until yield(won) {
         var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
@@ -540,29 +543,32 @@ task updateSaki(scene: Scene, map: Map, haniwa: Haniwa) {
         }
 
         if (haniwa.onGround && !haniwa.isJumping && shouldJump) {
-            print("JUMP");
             haniwa.isJumping = true;
             var jumpSFX = @Sound("jump");
             jumpSFX.play();
 
             haniwa.targetSpeed.x = 0f;
             haniwa.targetSpeed.y = -10f;
+
+            beforeJumpPos = tilePos;
         }
-        else if (haniwa.isJumping && !isSolid(belowId)) {
+        else if (haniwa.isJumping && !(tilePos.x == beforeJumpPos.x && tilePos.y == beforeJumpPos.y)) {
+            var rightPos = @Vec2i(tilePos.x + 1, tilePos.y);
+            var rightId  = getMapId(rightPos.x, rightPos.y);
+            
+            var leftPos = @Vec2i(tilePos.x, tilePos.y);
+            var leftId  = getMapId(leftPos.x, leftPos.y);
+
             var downRightPos = @Vec2i(tilePos.x + 1, tilePos.y + 1);
             var downRightId = getMapId(downRightPos.x, downRightPos.y);
 
-            var downLeftPos = @Vec2i(tilePos.x - 1, tilePos.y + 1);
+            var downLeftPos = @Vec2i(tilePos.x, tilePos.y + 1);
             var downLeftId = getMapId(downLeftPos.x, downLeftPos.y);
 
-            print("haniwa.direction: #{haniwa.direction}");
-            print("downLefId: #{downLeftId}");
-
-            var canLandLeft  = false; //haniwa.direction == -1f && isSolid(downLeftId);
-            var canLandRight = haniwa.direction == 1f && isSolid(downRightId);
+            var canLandLeft  = haniwa.direction == -1f && isSolid(downLeftId) && !isSolid(leftId);
+            var canLandRight = haniwa.direction == 1f && isSolid(downRightId) && !isSolid(rightId);
 
             if (canLandLeft || canLandRight) {
-                print("LAND");
                 haniwa.isJumping = false;
                 haniwa.resetSpeed();
             }
@@ -570,23 +576,40 @@ task updateSaki(scene: Scene, map: Map, haniwa: Haniwa) {
     }
 }
 
+func digTile(tilePos: Vec2i) {
+    var digSFX = @Sound("dig");
+    digSFX.play();
+    setMapId(tilePos.x, tilePos.y, TileType.air);
+}
+
 task updateMomoyo(scene: Scene, map: Map, haniwa: Haniwa) {
     updateJump(scene, map, haniwa);
 
     until yield(won) {
-        var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
-        var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
-        var belowId = getMapId(belowPos.x, belowPos.y);
-
         if (haniwa.onGround && haniwa.turnedOn) {
-            if (belowId == TileType.rock) {
-                var digSFX = @Sound("dig");
-                digSFX.play();
+            var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+            var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
+            var belowId = getMapId(belowPos.x, belowPos.y);
 
+            var rightPos = @Vec2i(tilePos.x + 1, tilePos.y);
+            var rightId = getMapId(rightPos.x, rightPos.y);
+
+            var leftPos = @Vec2i(tilePos.x, tilePos.y);
+            var leftId = getMapId(leftPos.x, leftPos.y);
+
+            if (belowId == TileType.rock) {
+                digTile(belowPos);
                 haniwa.targetSpeed.x = 0f;
-                setMapId(belowPos.x, belowPos.y, TileType.air);
             } else if(belowId != TileType.up && isSolid(belowId)) {
                 haniwa.resetSpeed();
+            }
+
+            if (haniwa.direction == 1f && rightId == TileType.rock) {
+                digTile(rightPos);
+            }
+
+            if (haniwa.direction == -1f && leftId == TileType.rock) {
+                digTile(leftPos);
             }
         }
     }
