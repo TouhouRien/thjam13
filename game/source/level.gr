@@ -220,7 +220,9 @@ task updateHaniwa(map: Map, haniwa: Haniwa, others: [Haniwa]) {
                 var otherPos  = worldToMapPosition(map, other.actor.position + other.offset);
 
                 if ((haniwaPos.x + 1 == otherPos.x || haniwaPos.x - 1 == otherPos.x) && haniwaPos.y == otherPos.y) {
-                    // @TODO sound
+                    var startSFX = @Sound("start");
+                    startSFX.play();
+
                     other.turnedOn = true;
                     other.resetSpeed();
                 }
@@ -290,8 +292,7 @@ task updateJump(scene: Scene, map: Map, haniwa: Haniwa) {
                 haniwa.targetSpeed.y = -10f;
             }
         }
-        // @TODO fix stop jumping
-        else if (belowId == TileType.air && isSolid(downRightId)) {
+        else if (belowId != TileType.up && isSolid(downRightId)) {
             haniwa.isJumping = false;
             haniwa.resetSpeed();
         }
@@ -352,7 +353,7 @@ task updateMomoyo(scene: Scene, map: Map, haniwa: Haniwa) {
 
                 haniwa.targetSpeed.x = 0f;
                 setMapId(belowPos.x, belowPos.y, TileType.air);
-            } else if(isSolid(belowId)) {
+            } else if(belowId != TileType.up && isSolid(belowId)) {
                 haniwa.resetSpeed();
             }
         }
@@ -360,32 +361,43 @@ task updateMomoyo(scene: Scene, map: Map, haniwa: Haniwa) {
 }
 
 task updateSeija(scene: Scene, map: Map, haniwa: Haniwa) {
-    updateJump(scene, map, haniwa);
-
+    var trigger = false;
     loop yield {
         var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
         var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
         var belowId = getMapId(belowPos.x, belowPos.y);
 
         if (haniwa.onGround && !haniwa.isJumping) {
-            if (belowId == TileType.down) {
-                // @TODO sound
+            if (!trigger && belowId == TileType.down) {
+                var flipSFX = @Sound("flip");
+                flipSFX.play();
                 setMapId(belowPos.x, belowPos.y, TileType.up);
-            } else if (belowId == TileType.up) {
-                // @TODO sound
+                trigger = true;
+            } else if (!trigger && belowId == TileType.up) {
+                var flipSFX = @Sound("flip");
+                flipSFX.play();
                 setMapId(belowPos.x, belowPos.y, TileType.down);
+                trigger = true;
+            }
+            
+            if (belowId != TileType.down && belowId != TileType.up) {
+                trigger = false;
             }
         }
     }
 }
 
 task updateGoal(map: Map, player: Haniwa, goal: Goal) {
+    var won = false;
+
     loop yield {
         var playerPos = worldToMapPosition(map, player.actor.position + player.offset);
         var goalPos   = worldToMapPosition(map, goal.actor.position);
 
-        if (playerPos.x == goalPos.x && playerPos.y == goalPos.y) {
-            print("WIN!");
+        if (!won && playerPos.x == goalPos.x && playerPos.y == goalPos.y) {
+            var winSFX = @Sound("win");
+            winSFX.play();
+            won = true;
         }
     }
 }
