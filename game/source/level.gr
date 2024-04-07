@@ -479,28 +479,63 @@ task updateHaniwa(map: Map, haniwa: Haniwa) {
 }
 
 task updateJump(scene: Scene, map: Map, haniwa: Haniwa) {
+    // START NEW
+    var beforeJumpPos = @Vec2i.zero;
+
     until yield(won) {
         var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
 
         var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
         var belowId = getMapId(belowPos.x, belowPos.y);
 
-        var downRightPos = @Vec2i(tilePos.x + 1, tilePos.y + 1);
-        var downRightId = getMapId(downRightPos.x, downRightPos.y);
+        var shouldJump = false;
+        if (!haniwa.isJumping && belowId == TileType.up) {
+            var upPos = @Vec2i(tilePos.x, tilePos.y - 1);
+            do {
+                var rightPos = @Vec2i(upPos.x + 1, upPos.y);
+                var rightId = getMapId(rightPos.x, rightPos.y);
 
-        if (haniwa.onGround) {
-            if (belowId == TileType.up && !haniwa.isJumping) {
-                haniwa.isJumping = true;
-                var jumpSFX = @Sound("jump");
-                jumpSFX.play();
+                var leftPos = @Vec2i(upPos.x, upPos.y);
+                var leftId = getMapId(leftPos.x, leftPos.y);
 
-                haniwa.targetSpeed.x = 0f;
-                haniwa.targetSpeed.y = -10f;
-            }
+                if (isSolid(rightId) || isSolid(leftId)) {
+                    shouldJump = true;
+                }
+
+                upPos.y -= 1;
+            } while (upPos.y > 0 && shouldJump == false);
         }
-        else if (!isSolid(belowId) && isSolid(downRightId)) {
-            haniwa.isJumping = false;
-            haniwa.resetSpeed();
+
+        if (haniwa.onGround && !haniwa.isJumping && shouldJump) {
+            haniwa.isJumping = true;
+            var jumpSFX = @Sound("jump");
+            jumpSFX.play();
+
+            haniwa.targetSpeed.x = 0f;
+            haniwa.targetSpeed.y = -10f;
+
+            beforeJumpPos = tilePos;
+        }
+        else if (haniwa.isJumping && !(tilePos.x == beforeJumpPos.x && tilePos.y == beforeJumpPos.y)) {
+            var rightPos = @Vec2i(tilePos.x + 1, tilePos.y);
+            var rightId  = getMapId(rightPos.x, rightPos.y);
+            
+            var leftPos = @Vec2i(tilePos.x, tilePos.y);
+            var leftId  = getMapId(leftPos.x, leftPos.y);
+
+            var downRightPos = @Vec2i(tilePos.x + 1, tilePos.y + 1);
+            var downRightId = getMapId(downRightPos.x, downRightPos.y);
+
+            var downLeftPos = @Vec2i(tilePos.x, tilePos.y + 1);
+            var downLeftId = getMapId(downLeftPos.x, downLeftPos.y);
+
+            var canLandLeft  = haniwa.direction == -1f && isSolid(downLeftId) && !isSolid(leftId);
+            var canLandRight = haniwa.direction == 1f && isSolid(downRightId) && !isSolid(rightId);
+
+            if (canLandLeft || canLandRight) {
+                haniwa.isJumping = false;
+                haniwa.resetSpeed();
+            }
         }
     }
 }
@@ -510,14 +545,25 @@ task updateCirno(scene: Scene, map: Map, haniwa: Haniwa) {
 
     until yield(won) {
         var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+
         var downRightPos = @Vec2i(tilePos.x + 1, tilePos.y + 1);
         var downRightId = getMapId(downRightPos.x, downRightPos.y);
+
+        var downLeftPos = @Vec2i(tilePos.x, tilePos.y + 1);
+        var downLeftId = getMapId(downLeftPos.x, downLeftPos.y);
 
         if (downRightId == TileType.water) {
             var freezeSFX = @Sound("freeze");
             freezeSFX.play();
 
-            waterToIce(scene, map, downRightPos);
+            waterToIce(scene, map, downRightPos, true);
+        }
+
+        if (downLeftId == TileType.water) {
+            var freezeSFX = @Sound("freeze");
+            freezeSFX.play();
+
+            waterToIce(scene, map, downLeftPos, false);
         }
     }
 }
@@ -620,9 +666,71 @@ task updateMomoyo(scene: Scene, map: Map, haniwa: Haniwa) {
             }
         }
     }
+
+    // START NEW
+    var beforeJumpPos = @Vec2i.zero;
+
+    until yield(won) {
+        var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+
+        var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
+        var belowId = getMapId(belowPos.x, belowPos.y);
+
+        var shouldJump = false;
+        if (!haniwa.isJumping && belowId == TileType.up) {
+            var upPos = @Vec2i(tilePos.x, tilePos.y - 1);
+            do {
+                var rightPos = @Vec2i(upPos.x + 1, upPos.y);
+                var rightId = getMapId(rightPos.x, rightPos.y);
+
+                var leftPos = @Vec2i(upPos.x, upPos.y);
+                var leftId = getMapId(leftPos.x, leftPos.y);
+
+                if (isSolid(rightId) || isSolid(leftId)) {
+                    shouldJump = true;
+                }
+
+                upPos.y -= 1;
+            } while (upPos.y > 0 && shouldJump == false);
+        }
+
+        if (haniwa.onGround && !haniwa.isJumping && shouldJump) {
+            haniwa.isJumping = true;
+            var jumpSFX = @Sound("jump");
+            jumpSFX.play();
+
+            haniwa.targetSpeed.x = 0f;
+            haniwa.targetSpeed.y = -10f;
+
+            beforeJumpPos = tilePos;
+        }
+        else if (haniwa.isJumping && !(tilePos.x == beforeJumpPos.x && tilePos.y == beforeJumpPos.y)) {
+            var rightPos = @Vec2i(tilePos.x + 1, tilePos.y);
+            var rightId  = getMapId(rightPos.x, rightPos.y);
+            
+            var leftPos = @Vec2i(tilePos.x, tilePos.y);
+            var leftId  = getMapId(leftPos.x, leftPos.y);
+
+            var downRightPos = @Vec2i(tilePos.x + 1, tilePos.y + 1);
+            var downRightId = getMapId(downRightPos.x, downRightPos.y);
+
+            var downLeftPos = @Vec2i(tilePos.x, tilePos.y + 1);
+            var downLeftId = getMapId(downLeftPos.x, downLeftPos.y);
+
+            var canLandLeft  = haniwa.direction == -1f && isSolid(downLeftId) && !isSolid(leftId);
+            var canLandRight = haniwa.direction == 1f && isSolid(downRightId) && !isSolid(rightId);
+
+            if (canLandLeft || canLandRight) {
+                haniwa.isJumping = false;
+                haniwa.resetSpeed();
+            }
+        }
+    }
 }
 
 task updateSeija(scene: Scene, map: Map, haniwa: Haniwa) {
+    updateJump(scene, map, haniwa);
+
     var trigger = false;
     until yield(won) {
         var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);

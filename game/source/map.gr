@@ -117,7 +117,7 @@ export func isSolid(id: int)(bool) {
     return id > 1;
 }
 
-export func waterToIce(scene: Scene, map: Map, tilePos: Vec2i) {
+export func waterToIce(scene: Scene, map: Map, tilePos: Vec2i, isRight: bool) {
     var isWater = false;
     var nextPos = tilePos;
 
@@ -132,7 +132,11 @@ export func waterToIce(scene: Scene, map: Map, tilePos: Vec2i) {
             isWater = false;
         }
         
-        nextPos = @Vec2i(nextPos.x + 1, nextPos.y);
+        if (isRight) {
+            nextPos = @Vec2i(nextPos.x + 1, nextPos.y);
+        } else {
+            nextPos = @Vec2i(nextPos.x - 1, nextPos.y);
+        }
     } while (isWater);
 }
 
