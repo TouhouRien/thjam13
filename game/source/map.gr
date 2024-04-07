@@ -1,11 +1,11 @@
-import "solid.gr"
-
 export enum TileType {
     air;
     water;
     earth;
     rock;
     ice;
+    down;
+    up;
 }
 
 class Cell {
@@ -105,6 +105,16 @@ export task updateMap(scene: Scene, map: Map) {
     }
 }
 
+export func addSolid(scene: Scene, worldPos: Vec2i, hitbox: Vec2i, tileType: TileType)(Solid) {
+    var solid = @Solid;
+    solid.position = worldPos;
+    solid.hitbox = hitbox;
+    solid.addTag(tileType as<string>);
+    scene.addSolid(solid);
+
+    return solid;
+}
+
 export func isSolid(cell: Cell)(bool) {
     return isSolid(cell.id);
 }
@@ -159,4 +169,48 @@ export func getMapId(x: int, y: int) (int) {
         return -1;
 
     return map.grid[x][y].id;
+}
+
+func getCell(x: int, y: int) (Cell?) {
+    var map = currentMap?;
+    if (x < 0 || y < 0)
+        return null;
+    if (x >= map.width || y >= map.height)
+        return null;
+
+    return map.grid[x][y]; 
+}
+
+func accumulateSameType(oCell: Cell?, type: TileType, aCells: [Cell]) {
+    if (oCell) {
+        var cell = oCell?;
+        if (cell.id == type) {
+            aCells ~= cell;
+        }
+    }
+}
+
+export func getNeighbors(x: int, y: int, type: TileType) ([Cell]) {
+    var isSameType = false;
+    var neighbors : [Cell];
+
+    do {
+        // Ici l'array est passe par copie donc il n'est pas rempli :(
+        accumulateSameType(getCell(x - 1, y - 1), type, neighbors);
+        accumulateSameType(getCell(x    , y - 1), type, neighbors);
+        accumulateSameType(getCell(x + 1, y - 1), type, neighbors);
+        accumulateSameType(getCell(x - 1, y    ), type, neighbors);
+        accumulateSameType(getCell(x    , y    ), type, neighbors);
+        accumulateSameType(getCell(x + 1, y    ), type, neighbors);
+        accumulateSameType(getCell(x - 1, y + 1), type, neighbors);
+        accumulateSameType(getCell(x   , y + 1), type, neighbors);
+        accumulateSameType(getCell(x + 1, y + 1), type, neighbors);
+
+        x += 1;
+        y -= 1;
+
+        isSameType = getMapId(x, y) == type;
+    } while (isSameType);
+
+    return neighbors;
 }
