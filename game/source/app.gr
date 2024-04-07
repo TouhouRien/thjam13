@@ -12,7 +12,19 @@ event app {
 func input() {
     @Input.addAction("click");
     @Input.addActionEvent("click", @InputEvent.mouseButton(MouseButton.left, KeyState.pressed, 1, @Vec2f.zero, @Vec2f.zero));
-
+    
+    /*@Input.addAction("up");
+    @Input.addAction("down");
+    @Input.addAction("left");
+    @Input.addAction("right");
+    @Input.addAction("jump");
+    
+    @Input.addActionEvent("up", @InputEvent.keyButton(KeyButton.up, KeyState.pressed));
+    @Input.addActionEvent("down", @InputEvent.keyButton(KeyButton.down, KeyState.pressed));
+    @Input.addActionEvent("left", @InputEvent.keyButton(KeyButton.left, KeyState.pressed));
+    @Input.addActionEvent("right", @InputEvent.keyButton(KeyButton.right, KeyState.pressed));
+    @Input.addActionEvent("jump", @InputEvent.keyButton(KeyButton.space, KeyState.pressed));
+    */
 }
 
 task debug() {

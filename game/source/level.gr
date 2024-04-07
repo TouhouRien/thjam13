@@ -1,7 +1,7 @@
 import "map.gr"
 import "util.gr"
 
-enum HaniwaType = {
+enum HaniwaType {
     mayumi;
     seija;
     cirno;
@@ -43,8 +43,8 @@ export func initLevel() {
     haniwaTypeSpawned = default<[bool]>;
     haniwas = default<[Haniwa]>;
     loop(i, HaniwaType.momoyo as<int> + 1) {
-        haniwaTypeList[i] = i as<HaniwaType> as<string>;
-        haniwaTypeSpawned[i] = false;
+        haniwaTypeList ~= i as<HaniwaType> as<string>;
+        haniwaTypeSpawned ~= false;
     }
 
     var music = @Music("tinyClayBuddies");
@@ -56,40 +56,14 @@ export func initLevel() {
     var scene = @Level.findSceneByName("level")?;
     updateMap(scene, map);
 
-    initInput();
-
-    var mayumi = initHaniwa(scene, map, "mayumi", @Vec2i(0, 8), true);
-    var seija = initHaniwa(scene, map, "seija", @Vec2i(1, 8), false);
-    var cirno = initHaniwa(scene, map, "cirno", @Vec2i(2, 8), false);
-    var saki = initHaniwa(scene, map, "saki", @Vec2i(3, 8), false);
-    var momoyo = initHaniwa(scene, map, "momoyo", @Vec2i(6, 3), false);
-
-
-    updateHaniwa(map, mayumi, haniwas);
-    updateJump(scene, map, mayumi);
-
-    updateHaniwa(map, seija, haniwas);
-    updateSeija(scene, map, seija);
-
-    updateHaniwa(map, cirno, haniwas);
-    updateCirno(scene, map, cirno);
-
-    updateHaniwa(map, saki, haniwas);
-    updateSaki(scene, map, saki);
-
-    updateHaniwa(map, momoyo, haniwas);
-    updateMomoyo(scene, map, momoyo);
-
     var goal = initGoal(scene, map, @Vec2i(15, 5));
-    updateGoal(map, mayumi, goal);
 
-    createDrawer();
+    createDrawer(scene, map, goal);
 }
 
-func createDrawer() {
+func createDrawer(scene: Scene, map: Map, goal: Goal) {
     var width = 700f;
     var height = 100f;
-    
 
     var drawer = @UIElement;
     drawer.size = @Vec2f(width, height);
@@ -105,7 +79,7 @@ func createDrawer() {
     hbox.spacing = 16f;
     drawer.addUI(hbox);
 
-    for(type, haniwaTypes) {
+    for(type, haniwaTypeList) {
         var btn = @UIElement;
         btn.size = @Vec2f(64, 64f);
 
@@ -121,6 +95,38 @@ func createDrawer() {
         btn.addImage(sprite);
 
         btn.addEventListener("click", event {
+            switch(type)
+            case("mayumi") {
+                var mayumi = initHaniwa(scene, map, "mayumi", @Vec2i(0, 8), true);
+                haniwas ~= mayumi;
+                updateHaniwa(map, mayumi);
+                updateJump(scene, map, mayumi);
+                updateGoal(map, mayumi, goal);
+            }
+            case("seija") {
+                var seija = initHaniwa(scene, map, "seija", @Vec2i(1, 8), false);
+                haniwas ~= seija;
+                updateHaniwa(map, seija);
+                updateSeija(scene, map, seija);
+            }
+            case("cirno") {
+                var cirno = initHaniwa(scene, map, "cirno", @Vec2i(2, 8), false);
+                haniwas ~= cirno;
+                updateHaniwa(map, cirno);
+                updateCirno(scene, map, cirno);
+            }
+            case("saki") {
+                var saki = initHaniwa(scene, map, "saki", @Vec2i(3, 8), false);
+                haniwas ~= saki;
+                updateHaniwa(map, saki);
+                updateSaki(scene, map, saki);
+            }
+            case("momoyo") {
+                var momoyo = initHaniwa(scene, map, "momoyo", @Vec2i(6, 3), false);
+                haniwas ~= momoyo;
+                updateHaniwa(map, momoyo);
+                updateMomoyo(scene, map, momoyo);
+            }
         });
         btn.addEventListener("mouseenter", event {
         rect.color = @Color.blue;
@@ -132,20 +138,6 @@ func createDrawer() {
     }
 
     @UI.add(drawer);
-}
-
-func initInput() {
-    @Input.addAction("up");
-    @Input.addAction("down");
-    @Input.addAction("left");
-    @Input.addAction("right");
-    @Input.addAction("jump");
-    
-    @Input.addActionEvent("up", @InputEvent.keyButton(KeyButton.up, KeyState.pressed));
-    @Input.addActionEvent("down", @InputEvent.keyButton(KeyButton.down, KeyState.pressed));
-    @Input.addActionEvent("left", @InputEvent.keyButton(KeyButton.left, KeyState.pressed));
-    @Input.addActionEvent("right", @InputEvent.keyButton(KeyButton.right, KeyState.pressed));
-    @Input.addActionEvent("jump", @InputEvent.keyButton(KeyButton.space, KeyState.pressed));
 }
 
 func initHaniwa(scene: Scene, map: Map, name: string, startPos: Vec2i, turnedOn: bool)(Haniwa) {
@@ -205,13 +197,13 @@ func initGoal(scene: Scene, map: Map, startPos: Vec2i)(Goal) {
     return goal;
 }
 
-task updateHaniwa(map: Map, haniwa: Haniwa, others: [Haniwa]) {
+task updateHaniwa(map: Map, haniwa: Haniwa) {
     loop yield {
         if (!haniwa.turnedOn) {
             haniwa.targetSpeed.x = 0f;
         } else {
-            loop (otherId, others.size) {
-                var other = others[otherId];
+            loop (otherId, haniwas.size) {
+                var other = haniwas[otherId];
                 if (other.turnedOn) {
                     continue;
                 }
