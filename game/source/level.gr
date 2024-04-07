@@ -63,7 +63,7 @@ export func initLevel() {
 
     var goal = initGoal(scene, map, @Vec2i(15, 5));
 
-    haniwaSpawner(scene, map, goal);
+    haniwaSpawner(scene, map, goal, spawnAreas, false);
 }
 
 var currentDrawer: UIElement?;
@@ -75,7 +75,7 @@ func createDrawer(scene: Scene, map: Map, goal: Goal, spawnTile: Vec2i) {
         var drawer = currentDrawer?;
         drawer.isEnabled = false;
         drawer.runState("hidden");
-        wait(30);
+        wait(10);
         drawer.remove();
     }
 
@@ -86,14 +86,14 @@ func createDrawer(scene: Scene, map: Map, goal: Goal, spawnTile: Vec2i) {
     currentDrawer = drawer;
 
     var visibleState = @UIState("visible");
-    visibleState.time = 30;
+    visibleState.time = 20;
     visibleState.spline = Spline.sineInOut;
     drawer.addState(visibleState);
 
     var hiddenState = @UIState("hidden");
-    hiddenState.alpha = 0f;
+    hiddenState.scale = @Vec2f(1f, 0f);
     hiddenState.offset = @Vec2f(0f, -50f);
-    hiddenState.time = 30;
+    hiddenState.time = 10;
     hiddenState.spline = Spline.sineInOut;
     drawer.addState(hiddenState);
 
@@ -118,9 +118,10 @@ func createDrawer(scene: Scene, map: Map, goal: Goal, spawnTile: Vec2i) {
         exitBtn.setAlign(UIAlignX.right, UIAlignY.top);
         exitBtn.position = @Vec2f(32f, 32f);
         exitBtn.addEventListener("click", event {
+            haniwaSpawner(scene, map, goal, spawnAreas, false);
             drawer.isEnabled = false;
             drawer.runState("hidden");
-            wait(30);
+            wait(10);
             drawer.remove();
         });
         drawer.addUI(exitBtn);
@@ -161,7 +162,7 @@ func createDrawer(scene: Scene, map: Map, goal: Goal, spawnTile: Vec2i) {
                 }
             }
             spawnAreas = areas;
-            haniwaSpawner(scene, map, goal);
+            haniwaSpawner(scene, map, goal, spawnAreas, false);
             
             haniwaTypeSpawned[haniwaType as<int>] = true;
             var haniwa = initHaniwa(scene, map, type, spawnTile, true);
@@ -204,10 +205,10 @@ func createDrawer(scene: Scene, map: Map, goal: Goal, spawnTile: Vec2i) {
     @UI.add(drawer);
 }
 
-func haniwaSpawner(scene: Scene, map: Map, goal: Goal) {
+func haniwaSpawner(scene: Scene, map: Map, goal: Goal, areas: [Vec2i], isSelected: bool) {
     scene.clearUI();
 
-    for(area, spawnAreas) {
+    for(area, areas) {
         var btn = @UIElement;
         btn.size = @Vec2f(64f, 64f);
         btn.position = (area * 64 - 32) as<Vec2f>;
@@ -225,16 +226,22 @@ func haniwaSpawner(scene: Scene, map: Map, goal: Goal) {
 
         scene.addUI(btn);
 
-        btn.addEventListener("click", event {
-            createDrawer(scene, map, goal, area);
-        });
+        if(isSelected) {
+            sprite.color = @Color.blue;
+        }
+        else {
+            btn.addEventListener("click", event {
+                haniwaSpawner(scene, map, goal, [area], true);
+                createDrawer(scene, map, goal, area);
+            });
 
-        btn.addEventListener("mouseenter", event {
-            rect.isVisible = true;
-        });
-        btn.addEventListener("mouseleave", event {
-            rect.isVisible = false;
-        });
+            btn.addEventListener("mouseenter", event {
+                rect.isVisible = true;
+            });
+            btn.addEventListener("mouseleave", event {
+                rect.isVisible = false;
+            });
+        }
     }
 }
 
