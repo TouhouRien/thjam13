@@ -1,6 +1,6 @@
 import "solid.gr"
 
-export enum TileName {
+export enum TileType {
     air;
     water;
     earth;
@@ -61,17 +61,26 @@ export func initMap(tilemap: Tilemap, width: uint, height: uint)(Map) {
 
     var gamebg = @Sprite("gamebg");
     gamebg.anchor = @Vec2f.zero;
+    gamebg.position = @Vec2f(0, -map.tileSize.y * 2);
 
     map.entity.addImage(gamebg);
     map.entity.addImage(map.tilemap);
     scene.addEntity(map.entity);
 
+    initBorder(scene, map);
+
     currentMap = map;
     return map;
 }
 
-export func isSolid(cell: Cell)(bool) {
-    return cell.id > 1;
+func initBorder(scene: Scene, map: Map) {
+    loop (y, map.height) {
+        var worldPos = mapToWorldPosition(map, @Vec2i(-1, y));
+        addSolid(scene, worldPos, map.halfSize, TileType.earth);
+
+        var worldPos = mapToWorldPosition(map, @Vec2i(map.width, y));
+        addSolid(scene, worldPos, map.halfSize, TileType.earth);
+    }
 }
 
 export task updateMap(scene: Scene, map: Map) {
@@ -86,44 +95,68 @@ export task updateMap(scene: Scene, map: Map) {
                 if (isSolid(cell) && !cell.solid) {
                     var worldPos = mapToWorldPosition(map, @Vec2i(x, y));
                     cell.solid = addSolid(scene, worldPos, map.halfSize, cell.id);
-                }
-
-                /*if (!isSolid(cell) && cell.solid) {
+                } else if (!isSolid(cell) && cell.solid) {
                     var solid = cell.solid?;
                     solid.remove();
                     cell.solid = null;
-                }*/
+                }
             }
         }
     }
 }
 
-export func worldToMapPosition(map: Map, vec: Vec2i)(Vec2i) {
-    var noOffset = @Vec2i(vec.x - map.halfSize.x, vec.y - map.halfSize.y);
-    var noSize   = @Vec2i(noOffset.x / map.tileSize.x, noOffset.y / map.tileSize.y);
-    return noSize;
+export func isSolid(cell: Cell)(bool) {
+    return isSolid(cell.id);
+}
+
+export func isSolid(id: int)(bool) {
+    return id > 1;
+}
+
+export func waterToIce(scene: Scene, map: Map, tilePos: Vec2i) {
+    var isWater = false;
+    var nextPos = tilePos;
+
+    do {
+        var nextId = getMapId(nextPos.x, nextPos.y);
+
+        if (nextId == TileType.water) {
+            setMapId(nextPos.x, nextPos.y, TileType.ice);
+            addSolid(scene, mapToWorldPosition(map, nextPos), map.halfSize, TileType.ice);
+            isWater = true;
+        } else {
+            isWater = false;
+        }
+        
+        nextPos = @Vec2i(nextPos.x + 1, nextPos.y);
+    } while (isWater);
+}
+
+export func worldToMapPosition(map: Map, worldPos: Vec2i)(Vec2i) {
+    return (worldPos - map.halfSize) / map.tileSize;
 }
 
 export func mapToWorldPosition(map: Map, mapPos: Vec2i)(Vec2i) {
-    var worldPos = @Vec2i(mapPos.x * map.tileSize.x, mapPos.y * map.tileSize.y);
-
-    worldPos.x += map.halfSize.x;
-    worldPos.y += map.halfSize.y;
-
-    return worldPos;
+    return mapPos * map.tileSize + map.halfSize;
 }
 
-export func setMapId(x: uint, y: uint, id: int) {
+export func setMapId(x: int, y: int, id: int) {
     var map = currentMap?;
-    if(x >= map.width or y >= map.height)
+    if (x < 0 || y < 0)
         return;
+    if(x >= map.width || y >= map.height)
+        return;
+
     map.grid[x][y].id = id;
     map.tilemap.setTile(x, y, id);
 }
 
-export func getMapId(x: uint, y: uint) (int) {
+export func getMapId(x: int, y: int) (int) {
     var map = currentMap?;
-    if(x >= map.width or y >= map.height)
-        return;
+    if (x < 0 || y < 0)
+        return -1;
+    if (x >= map.width || y >= map.height)
+        return -1;
+
     return map.grid[x][y].id;
 }

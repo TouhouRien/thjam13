@@ -8,40 +8,14 @@ class Haniwa {
     var actor: Actor;
     var targetSpeed: Vec2f;
     var speed: Vec2f;
+    var offset: Vec2i;
     var isPlayer: bool;
     var onGround: bool;
-}
-
-func initHaniwa(scene: Scene, map: Map, name: string, startPos: Vec2i)(Haniwa) {
-    var actor = @Actor;
-    actor.position = mapToWorldPosition(map, startPos);
-    scene.addActor(actor);
-
-    var entity = @Entity;
-    scene.addEntity(entity);
-    actor.entity = entity;
-
-    var animation = @Animation(name);
-    actor.hitbox = animation.size as<Vec2i> / 2;
-    entity.addImage(animation);
-
-    var haniwa = @Haniwa {
-        entity = entity;
-        animation = animation;
-        actor = actor;
-        targetSpeed = @Vec2f(1f, 5f);
-        speed = @Vec2f.zero;
-    };
-
-    return haniwa;
 }
 
 export func initLevel() {
     var music = @Music("tinyClayBuddies");
     music.playTrack(2f);
-
-    var freezeSFX = @Sound("freeze");
-    freezeSFX.play();
 
     var tilemap = @Tilemap("level1");
     var map = initMap(tilemap, tilemap.width, tilemap.height);
@@ -51,14 +25,19 @@ export func initLevel() {
 
     initInput();
 
-    var mayumi = initHaniwa(scene, map, "mayumi", @Vec2i(0, 9));
+    var mayumi = initHaniwa(scene, map, "mayumi", @Vec2i(0, 8));
     updateHaniwa(mayumi);
-    var seija = initHaniwa(scene, map, "seija", @Vec2i(1, 9));
+
+    var seija = initHaniwa(scene, map, "seija", @Vec2i(1, 8));
     updateHaniwa(seija);
-    var cirno = initHaniwa(scene, map, "cirno", @Vec2i(2, 9));
+
+    var cirno = initHaniwa(scene, map, "cirno", @Vec2i(2, 8));
     updateHaniwa(cirno);
-    var saki = initHaniwa(scene, map, "saki", @Vec2i(3, 9));
+    updateCirno(scene, map, cirno);
+
+    var saki = initHaniwa(scene, map, "saki", @Vec2i(3, 8));
     updateHaniwa(saki);
+    updateSaki(scene, map, saki);
 }
 
 func initInput() {
@@ -73,6 +52,34 @@ func initInput() {
     @Input.addActionEvent("left", @InputEvent.keyButton(KeyButton.left, KeyState.pressed));
     @Input.addActionEvent("right", @InputEvent.keyButton(KeyButton.right, KeyState.pressed));
     @Input.addActionEvent("jump", @InputEvent.keyButton(KeyButton.space, KeyState.pressed));
+}
+
+func initHaniwa(scene: Scene, map: Map, name: string, startPos: Vec2i)(Haniwa) {
+    var offset = @Vec2i(0, 10);
+
+    var actor = @Actor;
+    actor.position = mapToWorldPosition(map, startPos) - offset;
+    actor.hitbox = @Vec2i(30, 40);
+    scene.addActor(actor);
+
+    var entity = @Entity;
+    scene.addEntity(entity);
+    actor.entity = entity;
+
+    var animation = @Animation(name);
+    animation.position = @Vec2f(0, 8);
+    entity.addImage(animation);
+
+    var haniwa = @Haniwa {
+        entity = entity;
+        animation = animation;
+        actor = actor;
+        targetSpeed = @Vec2f(1f, 5f);
+        speed = @Vec2f.zero;
+        offset = offset;
+    };
+
+    return haniwa;
 }
 
 task updateHaniwa(haniwa: Haniwa) {
@@ -94,7 +101,10 @@ task updateHaniwa(haniwa: Haniwa) {
         }
 
         var collision = haniwa.actor.moveX(haniwa.speed.x);
-        if (collision) {
+        if (collision && haniwa.onGround) {
+            haniwa.speed.x = 0f;
+            haniwa.targetSpeed.x = -haniwa.targetSpeed.x;
+            haniwa.animation.flipX = !haniwa.animation.flipX;
         }
 
         var collision = haniwa.actor.moveY(haniwa.speed.y);
@@ -115,9 +125,42 @@ task updateHaniwa(haniwa: Haniwa) {
     }
 }
 
-task updateCirno(haniwa: Haniwa) {
+task updateCirno(scene: Scene, map: Map, haniwa: Haniwa) {
     loop yield {
-        var tilePos = worldToMapPosition(map, haniwa.actor.position);
+        var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+        var downRightPos = @Vec2i(tilePos.x + 1, tilePos.y + 1);
+        var downRightId = getMapId(downRightPos.x, downRightPos.y);
+
+        if (downRightId == TileType.water) {
+            var freezeSFX = @Sound("freeze");
+            freezeSFX.play();
+
+            waterToIce(scene, map, downRightPos);
+        }
+    }
+}
+
+task updateSaki(scene: Scene, map: Map, haniwa: Haniwa) {
+    var isJumping = false;
+
+    loop yield {
+        var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+        var downRightPos = @Vec2i(tilePos.x + 1, tilePos.y + 1);
+        var downRightId = getMapId(downRightPos.x, downRightPos.y);
+
+        if (haniwa.onGround && !isJumping && !isSolid(downRightId)) {
+            isJumping = true;
+            var jumpSFX = @Sound("jump");
+            jumpSFX.play();
+
+            haniwa.targetSpeed.x = 0f;
+            haniwa.targetSpeed.y = -10f;
+        } else if (isJumping && isSolid(downRightId)) {
+            isJumping = false;
+            var rightPos = @Vec2i(tilePos.x + 1, tilePos.y);
+            haniwa.targetSpeed.x = 1f;
+            haniwa.targetSpeed.y = 5f;
+        }
     }
 }
 

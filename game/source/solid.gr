@@ -1,31 +1,11 @@
 import "map.gr"
 
-export func addSolid(scene: Scene, worldPos: Vec2i, hitbox: Vec2i, tileId: int)(Solid) {
+export func addSolid(scene: Scene, worldPos: Vec2i, hitbox: Vec2i, tileType: TileType)(Solid) {
     var solid = @Solid;
     solid.position = worldPos;
     solid.hitbox = hitbox;
-    solid.addTag(tileId as<TileName> as<string>);
+    solid.addTag(tileType as<string>);
     scene.addSolid(solid);
 
     return solid;
 }
-
-/*export func waterToIce(scene: Scene, tilemap: Tilemap, tilePos: Vec2i, tileId: int) {
-    var isWater = false;
-    var nextPos = @Vec2i(tilePos.x + 1, tilePos.y);
-
-    do {
-        var nextId = getTile(tilemap, nextPos.x, nextPos.y);
-
-        if (tileToName(nextId) == "water") {
-            var iceId = nameToTileId("ice");
-            setTile(tilemap, nextPos.x, nextPos.y, iceId);
-            addSolid(scene, tilemap, nextPos, iceId);
-            isWater = true;
-        } else {
-            isWater = false;
-        }
-
-        nextPos = @Vec2i(nextPos.x + 1, nextPos.y);
-    } while (isWater);
-}*/

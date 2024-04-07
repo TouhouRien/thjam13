@@ -1,4 +1,4 @@
 music "tinyClayBuddies" {
     file "tinyClayBuddies.ogg"
-    volume 1.0
+    volume 0.2
 }
