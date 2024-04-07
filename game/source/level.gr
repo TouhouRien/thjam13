@@ -83,8 +83,14 @@ export func initLevel(levelCount: int) {
     var levelName = "level" ~ (levelCount as<string>);
     var goalPos = @Vec2i.zero;
 
+    var scene = @Scene;
+    scene.name = "level";
+
+    @Level.addScene(scene);
+    @Camera.setPosition(@App.center as<Vec2f>);
+
     var tilemap = @Tilemap(levelName);
-    var map = initMap(tilemap, tilemap.width, tilemap.height);
+    var map = initMap(scene, tilemap, tilemap.width, tilemap.height);
 
     if (levelName == "test") {
         spawnAreas ~= @Vec2i(6, 8);
@@ -107,7 +113,6 @@ export func initLevel(levelCount: int) {
     }
     toSpawnSize = spawnAreas.size();
 
-    var scene = @Level.findSceneByName("level")?;
     updateMap(scene, map);
 
     var goal = initGoal(scene, map, goalPos);

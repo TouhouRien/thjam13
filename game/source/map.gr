@@ -31,7 +31,7 @@ export func initMap(width : uint, height: uint)(Map) {
     return initMap(tilemap, width, height);
 }
 
-export func initMap(tilemap: Tilemap, width: uint, height: uint)(Map) {
+export func initMap(scene: Scene, tilemap: Tilemap, width: uint, height: uint)(Map) {
     var map = @Map {
         width = width;
         height = height;
@@ -52,12 +52,6 @@ export func initMap(tilemap: Tilemap, width: uint, height: uint)(Map) {
 
         map.grid ~= column;
     }
-
-    var scene = @Scene;
-    scene.name = "level";
-
-    @Level.addScene(scene);
-    @Camera.setPosition(@App.center as<Vec2f>);
 
     var gamebg = @Sprite("gamebg");
     gamebg.anchor = @Vec2f.zero;
