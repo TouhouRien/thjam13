@@ -41,6 +41,9 @@ export func initLevel(levelCount: int) {
     won = false;
     @UI.clear();
 
+    if(levelCount > 2)
+        levelCount = 1;
+
     {
         var transition = @UIElement;
         transition.size = @App.size;
