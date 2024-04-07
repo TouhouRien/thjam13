@@ -2,7 +2,6 @@ import "level.gr"
 import "edit.gr"
 
 export func menu() {
-    var titleFont = initFont(3);
     var font = initFont(2);
 
     var bg = @UIElement;

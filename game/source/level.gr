@@ -1,6 +1,19 @@
 import "map.gr"
 import "util.gr"
 
+enum HaniwaType = {
+    mayumi;
+    seija;
+    cirno;
+    saki;
+    momoyo;
+}
+
+var haniwaTypeList: [string];
+var haniwaTypeSpawned: [bool];
+var spawnAreas: [Vec2i];
+var haniwas: [Haniwa];
+
 class Haniwa {
     var entity: Entity;
     var animation: Animation;
@@ -23,6 +36,17 @@ class Goal {
 }
 
 export func initLevel() {
+    @UI.clear();
+
+    spawnAreas = default<[Vec2i]>;
+    haniwaTypeList = default<[string]>;
+    haniwaTypeSpawned = default<[bool]>;
+    haniwas = default<[Haniwa]>;
+    loop(i, HaniwaType.momoyo as<int> + 1) {
+        haniwaTypeList[i] = i as<HaniwaType> as<string>;
+        haniwaTypeSpawned[i] = false;
+    }
+
     var music = @Music("tinyClayBuddies");
     music.playTrack(2f);
 
@@ -40,9 +64,6 @@ export func initLevel() {
     var saki = initHaniwa(scene, map, "saki", @Vec2i(3, 8), false);
     var momoyo = initHaniwa(scene, map, "momoyo", @Vec2i(6, 3), false);
 
-    var haniwas = [
-        mayumi, seija, cirno, saki, momoyo
-    ];
 
     updateHaniwa(map, mayumi, haniwas);
     updateJump(scene, map, mayumi);
@@ -61,6 +82,56 @@ export func initLevel() {
 
     var goal = initGoal(scene, map, @Vec2i(15, 5));
     updateGoal(map, mayumi, goal);
+
+    createDrawer();
+}
+
+func createDrawer() {
+    var width = 700f;
+    var height = 100f;
+    
+
+    var drawer = @UIElement;
+    drawer.size = @Vec2f(width, height);
+    drawer.setAlign(UIAlignX.center, UIAlignY.bottom);
+    drawer.position = @Vec2f(0f, 35f);
+
+    var bg = @RoundedRectangle.fill(width, height, 8f);
+    bg.anchor = @Vec2f.zero;
+    bg.color = @Color(0.08f, 0.11f, 0.18f);
+    drawer.addImage(bg);
+
+    var hbox = @HBox;
+    hbox.spacing = 16f;
+    drawer.addUI(hbox);
+
+    for(type, haniwaTypes) {
+        var btn = @UIElement;
+        btn.size = @Vec2f(64, 64f);
+
+        var rect = @RoundedRectangle.fill(btn.size.x, btn.size.y, 8f);
+        rect.anchor = @Vec2f.zero;
+        rect.color = @Color.red;
+        btn.addImage(rect);
+
+        var sprite = @Sprite(type);
+        sprite.anchor = @Vec2f.half;
+        sprite.position = @Vec2f(32f, 32f);
+
+        btn.addImage(sprite);
+
+        btn.addEventListener("click", event {
+        });
+        btn.addEventListener("mouseenter", event {
+        rect.color = @Color.blue;
+        });
+        btn.addEventListener("mouseleave", event {
+        rect.color = @Color.red;
+        });
+        hbox.addUI(btn);
+    }
+
+    @UI.add(drawer);
 }
 
 func initInput() {

@@ -12,6 +12,11 @@ animation "mayumi" {
     columns 2
 }
 
+sprite "mayumi" {
+    texture "haniwas"
+    clip 0 0 64 64
+}
+
 animation "cirno" {
     texture "haniwas"
     clip 0 64 64 64
@@ -20,6 +25,11 @@ animation "cirno" {
     repeat true
     lines 1
     columns 2
+}
+
+sprite "cirno" {
+    texture "haniwas"
+    clip 0 64 64 64
 }
 
 animation "saki" {
@@ -32,6 +42,11 @@ animation "saki" {
     columns 2
 }
 
+sprite "saki" {
+    texture "haniwas"
+    clip 0 128 64 64
+}
+
 animation "momoyo" {
     texture "haniwas"
     clip 0 192 64 64
@@ -42,6 +57,11 @@ animation "momoyo" {
     columns 2
 }
 
+sprite "momoyo" {
+    texture "haniwas"
+    clip 0 192 64 64
+}
+
 animation "seija" {
     texture "haniwas"
     clip 0 256 64 64
@@ -50,4 +70,9 @@ animation "seija" {
     repeat true
     lines 1
     columns 2
+}
+
+sprite "seija" {
+    texture "haniwas"
+    clip 0 256 64 64
 }
