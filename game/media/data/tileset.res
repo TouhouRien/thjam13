@@ -13,6 +13,18 @@ tileset "terrain" {
     lines 2
 }
 
+tilemap "testSaki" {
+    tileset "terrain"
+    size 5 5
+    tiles [
+        [0 0 0 0 0]
+        [0 0 0 0 0]
+        [0 0 3 0 0]
+        [0 0 3 0 0]
+        [2 2 2 2 2]
+    ]
+}
+
 tilemap "level1" {
     tileset "terrain"
     size 16 10
