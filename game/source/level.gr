@@ -9,7 +9,6 @@ enum HaniwaType {
     momoyo;
 }
 
-var baseMaps: [Tilemap];
 var haniwaTypeList: [string];
 var haniwaTypeSpawned: [bool];
 var spawnAreas: [Vec2i];
@@ -25,7 +24,7 @@ class Haniwa {
     var targetSpeed: Vec2f;
     var speed: Vec2f;
     var offset: Vec2i;
-    var direction: float;
+    var direction: int;
     var isPlayer: bool;
     var onGround: bool;
     var isJumping: bool;
@@ -38,21 +37,12 @@ class Goal {
     var actor: Actor;
 }
 
-export func loadTilemaps() {
-    var levelCount = 1;
-    while (levelCount < 3) {
-        var levelName = "level" ~ (levelCount as<string>);
-        baseMaps ~= @Tilemap(levelName);
-        levelCount++;
-    }
-}
-
 export func initLevel(levelCount: int) {
     won = false;
     @UI.clear();
 
-    if(levelCount > 1)
-        levelCount = 0;
+    if(levelCount > 2)
+        levelCount = 1;
 
     {
         var transition = @UIElement;
@@ -93,6 +83,8 @@ export func initLevel(levelCount: int) {
         haniwaTypeSpawned ~= false;
     }
 
+    var levelName = "test";
+    //var levelName = "level" ~ (levelCount as<string>);
     var goalPos = @Vec2i.zero;
 
     var scene = @Scene;
@@ -101,25 +93,26 @@ export func initLevel(levelCount: int) {
     @Level.addScene(scene);
     @Camera.setPosition(@App.center as<Vec2f>);
 
-    var tilemap = baseMaps[levelCount]; // Constructeur de copie necessaire pour reinit?
+    var tilemap = @Tilemap(levelName);
     var map = initMap(scene, tilemap, tilemap.width, tilemap.height);
 
-    if (levelCount == -1) {
+    if (levelName == "test") {
         spawnAreas ~= @Vec2i(6, 8);
         goalPos = @Vec2i(15, 8);
-    } else if (levelCount == 0) {
+    }
+    if (levelName == "level1") {
         spawnAreas ~= @Vec2i(1, 8);
         spawnAreas ~= @Vec2i(2, 8);
         spawnAreas ~= @Vec2i(3, 8);
         spawnAreas ~= @Vec2i(10, 8);
         spawnAreas ~= @Vec2i(6, 3);
         goalPos = @Vec2i(15, 5);
-    } else if (levelCount == 1) {
+    } else if (levelName == "level2") {
         spawnAreas ~= @Vec2i(1, 8);
         spawnAreas ~= @Vec2i(4, 1);
         spawnAreas ~= @Vec2i(5, 4);
         spawnAreas ~= @Vec2i(10, 8);
-        spawnAreas ~= @Vec2i(11, 3);
+        spawnAreas ~= @Vec2i(9, 3);
         goalPos = @Vec2i(15, 5);
     }
     toSpawnSize = spawnAreas.size();
@@ -385,7 +378,7 @@ func initHaniwa(scene: Scene, map: Map, name: string, startPos: Vec2i, turnedOn:
         targetSpeed = @Vec2f(2f, 5f);
         speed = @Vec2f.zero;
         offset = offset;
-        direction = 1f;
+        direction = 1;
         turnedOn = turnedOn;
     };
 
@@ -419,6 +412,10 @@ func initGoal(scene: Scene, map: Map, startPos: Vec2i)(Goal) {
     return goal;
 }
 
+func worldToMapPosition(map: Map, haniwa: Haniwa)(Vec2i) {
+    return worldToMapPosition(map, haniwa.actor.position + haniwa.offset * haniwa.direction);
+}
+
 task updateHaniwa(map: Map, haniwa: Haniwa) {
     until yield(won) {
         if (!haniwa.turnedOn) {
@@ -430,8 +427,8 @@ task updateHaniwa(map: Map, haniwa: Haniwa) {
                     continue;
                 }
 
-                var haniwaPos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
-                var otherPos  = worldToMapPosition(map, other.actor.position + other.offset);
+                var haniwaPos = worldToMapPosition(map, haniwa);
+                var otherPos  = worldToMapPosition(map, other);
 
                 if ((haniwaPos.x + 1 == otherPos.x || haniwaPos.x - 1 == otherPos.x) && haniwaPos.y == otherPos.y) {
                     var startSFX = @Sound("start");
@@ -464,7 +461,7 @@ task updateHaniwa(map: Map, haniwa: Haniwa) {
             haniwa.speed.x = 0f;
             haniwa.targetSpeed.x = -haniwa.targetSpeed.x;
             haniwa.animation.flipX = !haniwa.animation.flipX;
-            haniwa.direction *= -1f;
+            haniwa.direction *= -1;
         }
 
         var collision = haniwa.actor.moveY(haniwa.speed.y);
@@ -491,7 +488,7 @@ task updateJump(scene: Scene, map: Map, haniwa: Haniwa) {
     var beforeJumpPos = @Vec2i.zero;
 
     until yield(won) {
-        var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+        var tilePos = worldToMapPosition(map, haniwa);
 
         var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
         var belowId = getMapId(belowPos.x, belowPos.y);
@@ -537,8 +534,8 @@ task updateJump(scene: Scene, map: Map, haniwa: Haniwa) {
             var downLeftPos = @Vec2i(tilePos.x, tilePos.y + 1);
             var downLeftId = getMapId(downLeftPos.x, downLeftPos.y);
 
-            var canLandLeft  = haniwa.direction == -1f && isSolid(downLeftId) && !isSolid(leftId);
-            var canLandRight = haniwa.direction == 1f && isSolid(downRightId) && !isSolid(rightId);
+            var canLandLeft  = haniwa.direction == -1 && isSolid(downLeftId) && !isSolid(leftId);
+            var canLandRight = haniwa.direction == 1 && isSolid(downRightId) && !isSolid(rightId);
 
             if (canLandLeft || canLandRight) {
                 haniwa.isJumping = false;
@@ -552,7 +549,7 @@ task updateCirno(scene: Scene, map: Map, haniwa: Haniwa) {
     updateJump(scene, map, haniwa);
 
     until yield(won) {
-        var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+        var tilePos = worldToMapPosition(map, haniwa);
 
         var downRightPos = @Vec2i(tilePos.x + 1, tilePos.y + 1);
         var downRightId = getMapId(downRightPos.x, downRightPos.y);
@@ -580,7 +577,7 @@ task updateSaki(scene: Scene, map: Map, haniwa: Haniwa) {
     var beforeJumpPos = @Vec2i.zero;
 
     until yield(won) {
-        var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+        var tilePos = worldToMapPosition(map, haniwa);
 
         var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
         var belowId = getMapId(belowPos.x, belowPos.y);
@@ -631,8 +628,8 @@ task updateSaki(scene: Scene, map: Map, haniwa: Haniwa) {
             var downLeftPos = @Vec2i(tilePos.x, tilePos.y + 1);
             var downLeftId = getMapId(downLeftPos.x, downLeftPos.y);
 
-            var canLandLeft  = haniwa.direction == -1f && isSolid(downLeftId) && !isSolid(leftId);
-            var canLandRight = haniwa.direction == 1f && isSolid(downRightId) && !isSolid(rightId);
+            var canLandLeft  = haniwa.direction == -1 && isSolid(downLeftId) && !isSolid(leftId);
+            var canLandRight = haniwa.direction == 1 && isSolid(downRightId) && !isSolid(rightId);
 
             if (canLandLeft || canLandRight) {
                 haniwa.isJumping = false;
@@ -653,7 +650,7 @@ task updateMomoyo(scene: Scene, map: Map, haniwa: Haniwa) {
 
     until yield(won) {
         if (haniwa.onGround && haniwa.turnedOn) {
-            var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+            var tilePos = worldToMapPosition(map, haniwa);
             var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
             var belowId = getMapId(belowPos.x, belowPos.y);
 
@@ -670,11 +667,11 @@ task updateMomoyo(scene: Scene, map: Map, haniwa: Haniwa) {
                 haniwa.resetSpeed();
             }
 
-            if (haniwa.direction == 1f && rightId == TileType.rock) {
+            if (haniwa.direction == 1 && rightId == TileType.rock) {
                 digTile(rightPos);
             }
 
-            if (haniwa.direction == -1f && leftId == TileType.rock) {
+            if (haniwa.direction == -1 && leftId == TileType.rock) {
                 digTile(leftPos);
             }
         }
@@ -684,7 +681,7 @@ task updateMomoyo(scene: Scene, map: Map, haniwa: Haniwa) {
     var beforeJumpPos = @Vec2i.zero;
 
     until yield(won) {
-        var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+        var tilePos = worldToMapPosition(map, haniwa);
 
         var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
         var belowId = getMapId(belowPos.x, belowPos.y);
@@ -730,8 +727,8 @@ task updateMomoyo(scene: Scene, map: Map, haniwa: Haniwa) {
             var downLeftPos = @Vec2i(tilePos.x, tilePos.y + 1);
             var downLeftId = getMapId(downLeftPos.x, downLeftPos.y);
 
-            var canLandLeft  = haniwa.direction == -1f && isSolid(downLeftId) && !isSolid(leftId);
-            var canLandRight = haniwa.direction == 1f && isSolid(downRightId) && !isSolid(rightId);
+            var canLandLeft  = haniwa.direction == -1 && isSolid(downLeftId) && !isSolid(leftId);
+            var canLandRight = haniwa.direction == 1 && isSolid(downRightId) && !isSolid(rightId);
 
             if (canLandLeft || canLandRight) {
                 haniwa.isJumping = false;
@@ -746,7 +743,7 @@ task updateSeija(scene: Scene, map: Map, haniwa: Haniwa) {
 
     var trigger = false;
     until yield(won) {
-        var tilePos = worldToMapPosition(map, haniwa.actor.position + haniwa.offset);
+        var tilePos = worldToMapPosition(map, haniwa);
         var belowPos = @Vec2i(tilePos.x, tilePos.y + 1);
         var belowId = getMapId(belowPos.x, belowPos.y);
 
@@ -776,9 +773,9 @@ func win() {
     won = true;
 }
 
-task updateGoal(map: Map, player: Haniwa, goal: Goal) {
+task updateGoal(map: Map, haniwa: Haniwa, goal: Goal) {
     loop yield {
-        var playerPos = worldToMapPosition(map, player.actor.position + player.offset);
+        var playerPos = worldToMapPosition(map, haniwa);
         var goalPos   = worldToMapPosition(map, goal.actor.position);
 
         if (!won && playerPos.x == goalPos.x && playerPos.y == goalPos.y) {
