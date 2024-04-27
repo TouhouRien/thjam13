@@ -53,7 +53,8 @@ export func menu() {
     var startBtn = createButton(@Sprite("start"));
     startBtn.addEventListener("click", event {
         @UI.clear();
-        initLevel(1);
+        loadTilemaps();
+        initLevel(0);
     });
     vbox.addUI(startBtn);
 

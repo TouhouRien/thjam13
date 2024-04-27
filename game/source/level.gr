@@ -9,6 +9,7 @@ enum HaniwaType {
     momoyo;
 }
 
+var baseMaps: [Tilemap];
 var haniwaTypeList: [string];
 var haniwaTypeSpawned: [bool];
 var spawnAreas: [Vec2i];
@@ -37,12 +38,21 @@ class Goal {
     var actor: Actor;
 }
 
+export func loadTilemaps() {
+    var levelCount = 1;
+    while (levelCount < 3) {
+        var levelName = "level" ~ (levelCount as<string>);
+        baseMaps ~= @Tilemap(levelName);
+        levelCount++;
+    }
+}
+
 export func initLevel(levelCount: int) {
     won = false;
     @UI.clear();
 
-    if(levelCount > 2)
-        levelCount = 1;
+    if(levelCount > 1)
+        levelCount = 0;
 
     {
         var transition = @UIElement;
@@ -83,7 +93,6 @@ export func initLevel(levelCount: int) {
         haniwaTypeSpawned ~= false;
     }
 
-    var levelName = "level" ~ (levelCount as<string>);
     var goalPos = @Vec2i.zero;
 
     var scene = @Scene;
@@ -92,26 +101,25 @@ export func initLevel(levelCount: int) {
     @Level.addScene(scene);
     @Camera.setPosition(@App.center as<Vec2f>);
 
-    var tilemap = @Tilemap(levelName);
+    var tilemap = baseMaps[levelCount]; // Constructeur de copie necessaire pour reinit?
     var map = initMap(scene, tilemap, tilemap.width, tilemap.height);
 
-    if (levelName == "test") {
+    if (levelCount == -1) {
         spawnAreas ~= @Vec2i(6, 8);
         goalPos = @Vec2i(15, 8);
-    }
-    if (levelName == "level1") {
+    } else if (levelCount == 0) {
         spawnAreas ~= @Vec2i(1, 8);
         spawnAreas ~= @Vec2i(2, 8);
         spawnAreas ~= @Vec2i(3, 8);
         spawnAreas ~= @Vec2i(10, 8);
         spawnAreas ~= @Vec2i(6, 3);
         goalPos = @Vec2i(15, 5);
-    } else if (levelName == "level2") {
+    } else if (levelCount == 1) {
         spawnAreas ~= @Vec2i(1, 8);
         spawnAreas ~= @Vec2i(4, 1);
         spawnAreas ~= @Vec2i(5, 4);
         spawnAreas ~= @Vec2i(10, 8);
-        spawnAreas ~= @Vec2i(9, 3);
+        spawnAreas ~= @Vec2i(11, 3);
         goalPos = @Vec2i(15, 5);
     }
     toSpawnSize = spawnAreas.size();
@@ -578,7 +586,7 @@ task updateSaki(scene: Scene, map: Map, haniwa: Haniwa) {
         var belowId = getMapId(belowPos.x, belowPos.y);
 
         var shouldJump = false;
-        if (!haniwa.isJumping) {
+        if (!haniwa.isJumping && belowId != TileType.down) {
             var upPos = @Vec2i(tilePos.x, tilePos.y - 1);
             do {
                 var rightPos = @Vec2i(upPos.x + 1, upPos.y);
@@ -586,6 +594,11 @@ task updateSaki(scene: Scene, map: Map, haniwa: Haniwa) {
 
                 var leftPos = @Vec2i(upPos.x, upPos.y);
                 var leftId = getMapId(leftPos.x, leftPos.y);
+
+                var upId = getMapId(upPos.x, upPos.y);
+                if (isSolid(upId)) {
+                    break;
+                }
 
                 if (isSolid(rightId) || isSolid(leftId)) {
                     shouldJump = true;
